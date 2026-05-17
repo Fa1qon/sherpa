@@ -1,0 +1,20 @@
+.splitter {
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-default);
+}
+.splitter:hover, .splitter[data-dragging="true"] {
+  background: var(--accent);
+}
+.splitterH {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-default);
+}
+.splitterH:hover, .splitterH[data-dragging="true"] {
+  background: var(--accent);
+}

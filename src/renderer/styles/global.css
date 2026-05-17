@@ -1,0 +1,171 @@
+/* src/renderer/styles/global.css
+   Global resets + app-wide rules. Loaded once via App.tsx import. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+html, body {
+  font-size: var(--font-size-base, 12px);
+  line-height: 1.4;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.4;
+  background: var(--bg-app);
+  color: var(--fg-default);
+
+  /* App, not webpage. Disable text selection by default. Re-enable in chat
+     and code blocks via .selectable / [data-selectable]. */
+  -webkit-user-select: none;
+  user-select: none;
+
+  /* Disable text cursor on non-input elements; rely on default for inputs. */
+  cursor: default;
+
+  /* Prevent overscroll bounce on macOS. */
+  overscroll-behavior: none;
+}
+
+/* Allow selection in inputs, textareas, content-editable, and explicitly
+   tagged regions (chat, code). */
+input, textarea, [contenteditable="true"],
+.selectable, [data-selectable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+
+/* Focus rings — visible only for keyboard, not mouse. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button {
+  font: inherit;
+  background: none;
+  border: 1px solid var(--border-default);
+  color: inherit;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Native form controls — theme-consistent rendering.
+
+   Without these, Chromium falls back to OS-native input chrome on some
+   platforms (especially Windows light mode), producing white-on-white
+   selects and inputs that the user flagged. Tying them to our theme
+   tokens keeps text legible in both light + dark.
+   ──────────────────────────────────────────────────────────────────────── */
+
+input, select, textarea {
+  font: inherit;
+  color: var(--fg-default);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 5px 8px;
+  /* color-scheme drives the native scrollbar + dropdown caret to match. */
+  color-scheme: light dark;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+input:disabled, select:disabled, textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--fg-faint);
+}
+
+/* The theme classes set color-scheme so the OS-rendered dropdown options
+   (select popup) and date pickers follow the active theme. */
+.theme-dark, :root { color-scheme: dark; }
+.theme-light { color-scheme: light; }
+@media (prefers-color-scheme: light) { .theme-auto { color-scheme: light; } }
+@media (prefers-color-scheme: dark)  { .theme-auto { color-scheme: dark; } }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Zen mode — floating exit button rendered over all panels.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.zen-exit-btn {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: 500;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.zen-exit-btn:hover { opacity: 1; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   @xyflow/react chrome overrides
+
+   The library injects its own stylesheet per-component, which loads AFTER
+   this file in Vite's CSS graph. !important is the simple way to win for
+   the few cosmetic tweaks we care about; the alternative (importing the
+   override from each DagView/EditCanvas next to the @xyflow import) would
+   conflict with the parallel methodology-editor work.
+
+   Tweaks:
+   - Hide the "React Flow" attribution link (we never granted ourselves the
+     pro license, but the link still leaks library branding into our UI).
+   - Restyle the zoom controls so they look like our app's chrome buttons
+     instead of the generic light-on-white default which sits invisible
+     on the dark canvas.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.react-flow__attribution { display: none !important; }
+
+.react-flow__controls {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 6px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-default) !important;
+  color: var(--fg-default) !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+.react-flow__controls-button:last-child { border-bottom: none !important; }
+.react-flow__controls-button:hover { background: var(--bg-hover) !important; }
+.react-flow__controls-button svg { fill: currentColor; width: 14px; height: 14px; }

@@ -1,0 +1,167 @@
+.list { list-style: none; margin: 0; padding: 0; }
+.row { display: flex; align-items: stretch; }
+.item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--fg-default);
+  text-align: left;
+  min-width: 0;
+}
+.item:hover { background: var(--bg-hover); }
+.item[data-active="true"] { background: var(--bg-pressed); }
+.title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.msgCount {
+  font-size: 10px;
+  color: var(--fg-muted);
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 0 5px;
+  line-height: 16px;
+}
+.status {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fg-faint, var(--fg-muted));
+  flex-shrink: 0;
+}
+.status[data-status="running"] { background: var(--success, #4caf50); }
+.status[data-status="waiting-user"] { background: var(--warning, #ff9800); }
+.status[data-status="paused"] { background: var(--warning, #ff9800); }
+.status[data-status="closed"] { background: var(--border-default); }
+.status[data-status="created"] { background: var(--border-default); }
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-default);
+}
+.newBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--accent);
+  color: var(--accent-fg, #fff);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  flex: 1;
+  justify-content: center;
+}
+.newBtn:hover { opacity: 0.9; }
+.newBtn:disabled { opacity: 0.5; cursor: default; }
+
+/* Context menu */
+.ctxOverlay { position: fixed; inset: 0; z-index: 199; }
+.ctxMenu {
+  position: fixed;
+  z-index: 200;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 4px 0;
+  min-width: 160px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.ctxItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-default);
+}
+.ctxItem:hover { background: var(--bg-hover); }
+.ctxItemDanger { color: var(--error, #f44336); }
+.ctxItemDanger:hover { background: rgba(255,0,0,0.08); }
+.ctxSep { height: 1px; background: var(--border-default); margin: 4px 0; }
+
+/* Confirmation dialog */
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.confirmDialog {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 20px 24px;
+  width: 320px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.confirmMsg {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--fg-default);
+  line-height: 1.5;
+}
+.confirmActions { display: flex; justify-content: flex-end; gap: 8px; }
+.confirmCancel {
+  padding: 6px 14px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--fg-default);
+}
+.confirmCancel:hover { background: var(--bg-pressed); }
+.confirmDelete {
+  padding: 6px 14px;
+  background: var(--error, #f44336);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  color: #fff;
+}
+.confirmDelete:hover { opacity: 0.85; }
+
+.stageBadge {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.boardBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.boardBtn:hover { background: var(--bg-hover); color: var(--fg-default); }

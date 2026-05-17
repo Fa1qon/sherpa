@@ -1,0 +1,29 @@
+# release.yml — RELEASE workflow scaffold (TEMPLATE — to be filled by T-L7-04).
+#
+# Triggers: push to a tag matching v*.
+# Steps planned (per ADR-006 + ADR-009):
+#   1. Checkout + setup Node + npm install
+#   2. Build main + renderer
+#   3. Run tests
+#   4. Build Electron installers (electron-builder) on each OS
+#   5. Sign artifacts (Win: codesign / Mac: notarize)
+#   6. Upload to GitHub Releases
+#   7. Compute SHA256 + sign with ed25519 per ADR-006
+#   8. Verify signature in a downstream job
+#
+# This file is a TEMPLATE — DO NOT activate by renaming to .yml until T-L7-04
+# fills in: code signing keys, notarization config, release channel decision.
+
+name: Release (TEMPLATE — disabled)
+
+on:
+  workflow_dispatch:
+  # push:
+  #   tags: [v*]
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    if: false  # disabled until T-L7-04
+    steps:
+      - run: echo "Release pipeline scaffold — T-L7-04 will populate"

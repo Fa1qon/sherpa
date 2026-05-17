@@ -1,0 +1,104 @@
+.picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 48px;
+  height: 100%;
+  align-content: start;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--fg-muted);
+  margin-bottom: 24px;
+}
+
+.primaryButton {
+  background: var(--accent);
+  color: var(--accent-fg);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.primaryButton:hover { opacity: 0.9; }
+.primaryButton:disabled { opacity: 0.5; }
+
+.error {
+  margin-top: 16px;
+  padding: 8px 12px;
+  background: rgba(255, 69, 58, 0.1);
+  color: var(--error);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.scaffoldPrompt {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+}
+
+.scaffoldPrompt p { margin-bottom: 8px; }
+.scaffoldPrompt button { margin-right: 8px; }
+
+.recentTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.emptyRecent {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.recentList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.recentItem:hover { background: var(--bg-hover); }
+
+.recentName {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.recentPath {
+  color: var(--fg-muted);
+  font-size: 11px;
+}
+
+.recentRemove {
+  background: none;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+}
+
+.recentRemove:hover { color: var(--error); }

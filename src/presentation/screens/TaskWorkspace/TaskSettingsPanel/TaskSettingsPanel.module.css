@@ -1,0 +1,269 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--fg-muted);
+}
+.collapseBtn {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--fg-muted);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.collapseBtn:hover { background: var(--bg-hover); }
+.fieldset {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+.legend {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  padding: 0 4px;
+}
+.radioGroup {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.radioGroup label, .checkRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+.select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-app);
+  color: var(--fg-default);
+  font-size: 12px;
+}
+.placeholder {
+  margin: 0;
+  font-size: 11px;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+.chipStrip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 6px 16px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg-hover);
+  color: var(--fg-muted);
+}
+.editBtn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--fg-muted);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.editBtn:hover { background: var(--bg-hover); }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+
+.titleRow {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.titleInput {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  width: 100%;
+  background: var(--bg-input, var(--bg-app));
+  color: var(--fg-default);
+  box-sizing: border-box;
+}
+
+.fullRow {
+  grid-column: 1 / -1;
+}
+.presetRow {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 4px;
+}
+.presetBtn {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-app);
+  color: var(--fg-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, color 0.1s;
+}
+.presetBtn:hover { background: var(--bg-hover); color: var(--fg-default); }
+.presetBtnActive {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.presetBtnActive:hover { background: var(--accent); }
+
+/* ── Popup mode ── */
+.popup {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 12px;
+  width: 320px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28);
+  z-index: 200;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.popupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.popupTitle {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.popupClose {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  border-radius: 4px;
+  line-height: 1;
+  font-family: inherit;
+}
+.popupClose:hover { background: var(--bg-hover); color: var(--fg-default); }
+.popupRow {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.popupLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.pillRow {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.pill {
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s, color 0.1s;
+}
+.pill:hover { background: var(--bg-hover); color: var(--fg-default); }
+.pillActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--fg-on-accent, white);
+}
+.pillActive:hover { opacity: 0.88; }
+.popupSelect {
+  padding: 4px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-app);
+  color: var(--fg-default);
+  font-size: 12px;
+  font-family: inherit;
+}
+.popupCheck {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--fg-default);
+  cursor: pointer;
+}
+.popupCheck input { cursor: pointer; }
+.divider {
+  height: 1px;
+  background: var(--border-default);
+  border: none;
+  margin: 2px 0;
+}
+
+.applyBtn {
+  align-self: flex-end;
+  margin-top: 4px;
+  padding: 6px 18px;
+  background: var(--accent);
+  color: var(--fg-on-accent, #fff);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.applyBtn:hover { opacity: 0.85; }

@@ -1,0 +1,21 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.dialog {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 360px;
+  max-width: 480px;
+}
+.title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.fields { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; font-size: 13px; }
+.fields dt { color: var(--fg-muted); }
+.actions { margin-top: 20px; display: flex; justify-content: flex-end; }

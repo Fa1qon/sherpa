@@ -1,0 +1,32 @@
+{
+  "_comment_purpose": "Debian package metadata for the Linux .deb installer (T-L7-01). Consumed by electron-builder via `linux.deb` + the per-target `deb` block in electron-builder.yml. Mirrors the Debian Policy Manual fields commonly needed by .deb consumers.",
+  "_comment_status": "Stable for MVP-1. T-L7-04 release workflow may extend `recommends` once auxiliary integrations (e.g. desktop notifications, system tray) gain hard dependencies.",
+  "depends": [
+    "libgtk-3-0",
+    "libnotify4",
+    "libnss3",
+    "libxss1",
+    "libxtst6",
+    "xdg-utils",
+    "libatspi2.0-0",
+    "libdrm2",
+    "libgbm1",
+    "libxcb-dri3-0"
+  ],
+  "recommends": [
+    "libappindicator3-1",
+    "git"
+  ],
+  "suggests": [
+    "claude-code"
+  ],
+  "conflicts": [
+    "sherpa-ui-client-snap"
+  ],
+  "priority": "optional",
+  "section": "devel",
+  "maintainer": "Sherpa Team <packaging@sherpa-placeholder.example>",
+  "homepage": "https://github.com/sherpa-org-placeholder/sherpa-ui",
+  "synopsis": "Local-first, methodology-driven workspace UI for Sherpa",
+  "description": "Sherpa UI Client is a local-first Electron application that provides a methodology-driven workspace on top of the Sherpa CLI. The installer ships a bundled `sherpa` CLI binary at /opt/Sherpa UI Client/resources/bin/sherpa per ADR-006 (sub-decision: bundled CLI). All project data and methodology content remain under the user's HOME directory; no cloud telemetry."
+}

@@ -1,0 +1,3 @@
+{"event":"task_start","ts":"2026-04-30T00:00:00Z"}
+{"event":"task_step","ts":"2026-04-30T00:01:00Z","data":{"step":1
+{"event":"task_done","ts":"2026-04-30T00:02:00Z"}

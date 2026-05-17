@@ -1,0 +1,14 @@
+### Sample 1
+Hello! I have read the task spec carefully and drafted a thorough implementation plan that respects the project's architectural constraints.
+---
+### Sample 2
+The HookPort implementation ships eight Sherpa-managed hooks covering audit logging, token metrics, session timeline, context injection, language verification, gate enforcement, critical-zone warning, and cost warning.
+---
+### Sample 3
+We use the temp + fsync + rename protocol for atomic writes to the settings file, which guarantees data integrity even when the process crashes mid-write.
+---
+### Sample 4
+The merger tests verify that user-managed entries are preserved unchanged while Sherpa entries are replaced wholesale, satisfying the NF25 requirement.
+---
+### Sample 5
+Parse errors are handled gracefully: when the settings file is missing or malformed, we start from a fresh structure and persist it atomically without dropping user data from other sections.

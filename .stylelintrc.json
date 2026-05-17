@@ -1,0 +1,14 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "color-no-hex": [true, { "message": "Hardcoded hex colors are forbidden — use theme tokens (ADR-013)" }],
+    "function-disallowed-list": [
+      ["rgb", "rgba", "hsl", "hsla", "linear-gradient", "radial-gradient", "conic-gradient"],
+      { "message": "rgba()/rgb()/hsl()/gradient() are forbidden — use theme tokens (ADR-013)" }
+    ],
+    "property-disallowed-list": [
+      ["box-shadow"],
+      { "message": "Direct box-shadow is forbidden — use theme shadow tokens (ADR-013)" }
+    ]
+  }
+}

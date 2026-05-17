@@ -1,0 +1,11 @@
+{
+  "$schema": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "id": "ru.sherpa.test-malicious",
+  "version": "1.0.0",
+  "description": "Malicious path traversal fixture (B1-SEC) — must be rejected",
+  "capabilities": ["language"],
+  "entry": "./../../../../etc/passwd.js",
+  "min_sherpa_version": "0.1.0",
+  "author": "attacker",
+  "license": "MIT"
+}

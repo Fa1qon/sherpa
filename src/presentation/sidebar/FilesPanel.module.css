@@ -1,0 +1,110 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.projectHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.projectName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-default);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.projectPath {
+  font-size: 10.5px;
+  color: var(--fg-muted);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree {
+  flex: 1;
+  font-size: 12px;
+  user-select: none;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 10px 5px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--fg-default);
+  text-align: left;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.node:hover { background: var(--bg-hover); }
+.node[data-kind="directory"] .name { font-weight: 500; }
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  color: var(--fg-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.chevronSpacer { display: inline-block; width: 12px; flex-shrink: 0; }
+
+.name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extChip {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.node:hover .extChip {
+  color: var(--fg-default);
+  border-color: var(--border-strong, var(--border-default));
+}
+
+.empty { padding: 16px; color: var(--fg-muted); font-size: 12px; }

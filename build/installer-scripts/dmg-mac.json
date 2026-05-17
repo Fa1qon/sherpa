@@ -1,0 +1,29 @@
+{
+  "_comment_purpose": "DMG layout descriptor for macOS installer (T-L7-01). Consumed by electron-builder via `dmg.contents` + `dmg.background` references in electron-builder.yml. Window geometry, icon positions, and the bundled CLI shortcut land here.",
+  "_comment_status": "Placeholder layout pending real brand assets (background.png at 540x380). T-L7-04 release pipeline replaces background.png before producing public artifacts.",
+  "title": "Sherpa UI Client",
+  "icon": "build/icons/icon.icns",
+  "background": "build/installer-scripts/dmg-background.png",
+  "iconSize": 80,
+  "iconTextSize": 12,
+  "window": {
+    "width": 540,
+    "height": 380
+  },
+  "contents": [
+    {
+      "x": 140,
+      "y": 200,
+      "type": "file",
+      "name": "Sherpa UI Client.app"
+    },
+    {
+      "x": 400,
+      "y": 200,
+      "type": "link",
+      "path": "/Applications"
+    }
+  ],
+  "format": "UDZO",
+  "_comment_codesign": "macOS code-signing identity is supplied by env CSC_LINK + CSC_KEY_PASSWORD in the GitHub Actions release workflow (T-L7-04). Notarization (notarytool) is wired in T-L7-02 once the Apple Developer ID is provisioned."
+}

@@ -1,0 +1,241 @@
+.library {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100%;
+}
+
+.sidebar {
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border-default);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.sidebarTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.searchBox {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  color: var(--fg-default);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.empty {
+  color: var(--fg-muted);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listItem {
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.listItem:hover { background: var(--bg-hover); }
+
+.listItem[data-active="true"] {
+  background: var(--bg-pressed);
+}
+
+.itemName {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.itemVersion {
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.detail {
+  overflow: hidden;
+}
+
+.detailRoot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.detailHeader {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.detailHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.detailHeaderTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.detailHeader h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.versionBadge {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 8px;
+  background: var(--bg-pressed);
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.detailHeader p {
+  margin-top: 8px;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.canvasContainer {
+  flex: 1;
+  overflow: hidden;
+}
+
+.loading, .error {
+  padding: 24px;
+  color: var(--fg-muted);
+}
+
+.error { color: var(--error); }
+
+.editLayout {
+  display: grid;
+  grid-template-columns: 1fr var(--editor-sidebar-w, 400px);
+  height: 100%;
+  position: relative;
+}
+
+.editCanvasWrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.editSidebar {
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebarResizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 5;
+}
+
+.sidebarResizer:hover,
+.sidebarResizer[data-dragging="true"] {
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.editLayoutWrap {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.editLayoutWrap > section {
+  flex: 1;
+  min-width: 0;
+}
+
+.viewSplit {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.viewSplit > .viewCanvasWrap {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.viewCanvasWrap {
+  height: 100%;
+  overflow: hidden;
+}
+
+.detailHeaderActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.libraryContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tabBar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+  padding: 0 12px;
+}
+
+.tab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-bottom: -1px;
+}
+
+.tab:hover { color: var(--fg-default); }
+
+.tabActive {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent, #4f46e5);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--fg-default);
+  font-weight: 600;
+  margin-bottom: -1px;
+}
+
+.casesContainer {
+  flex: 1;
+  overflow: hidden;
+}
+

@@ -1,0 +1,8 @@
+{
+  "id": "ru.sherpa.test-malformed",
+  "version": "not-a-semver",
+  "description": "",
+  "capabilities": [],
+  "entry": "/etc/passwd",
+  "author": "tester"
+}

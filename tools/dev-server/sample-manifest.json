@@ -1,0 +1,12 @@
+{
+  "_comment": "Sample release manifest served by tools/dev-server. Wire shape matches `UpdateManifest` in src/core/adapters/updater/manifest_verifier.ts. The `signature` field below is a placeholder — production manifests are signed by the Ed25519 key emitted by the T-L7-02 release-signing pipeline. The dev server is intended to exercise the polling + download paths; signature verification will return `signature_invalid` against this fixture (which is the documented behaviour for an unsigned dev manifest).",
+  "version": "0.1.0-alpha.1",
+  "released_at": "2026-05-04T00:00:00Z",
+  "channel": "stable",
+  "sha256": "b598aec2b13b65ff57cc59d6b7ef251e2aa95945c087a4943292625a74918a73",
+  "signing_key_hash": "sha256:247ca69cbcaa1c4c4bf6cc9e836bf1931463c92762f1376f7e72fe00a73a7cdb",
+  "signature": "PLACEHOLDER_SIGNATURE_NOT_VALID_FOR_PRODUCTION_BASE64",
+  "download_url": "https://localhost:8443/v/0.1.0-alpha.1/core.tar.gz",
+  "size_bytes": 96,
+  "notes": "Local dev fixture — minimal tar.gz containing version.txt = '0.0.1'. Regenerate via `node tools/dev-server/_gen-fixture.mjs` after editing fixture contents; copy the printed sha256 into this file."
+}

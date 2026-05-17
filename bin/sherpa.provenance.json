@@ -1,0 +1,20 @@
+{
+  "version": "0.0.0-dev",
+  "source_repo": "C:/Projects/sherpa",
+  "source_commit": "072f6835c9d35e935b7fc1a4cff58d24b2ffcd71",
+  "source_path": "tools/sherpa-cli/bin/",
+  "copied_at": "2026-04-30T16:28:04Z",
+  "binaries": {
+    "sherpa": {
+      "platform": "linux",
+      "size": 16222720,
+      "sha256": "fae84bac4b1a87459d87c9c696c648fb34d90c278879cdae9a3ac5ca20ad6aa3"
+    },
+    "sherpa.exe": {
+      "platform": "windows",
+      "size": 16390656,
+      "sha256": "dcb4c580b73f01731926156df60eaf253e0bbab61a77ff0912fe2460570a7934"
+    }
+  },
+  "note": "Pre-release dev binary; tagged semver release deferred until first sherpa-cli stable cut. AC-T-L0-04-2 regex relaxed per user-approved DEVIATION 2026-04-30."
+}

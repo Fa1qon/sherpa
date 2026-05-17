@@ -1,0 +1,13 @@
+{
+  "$schema": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "id": "ru.sherpa.lang-javascript",
+  "version": "1.0.0",
+  "description": "JavaScript language pack — syntax highlighting via @codemirror/lang-javascript.",
+  "capabilities": [
+    { "kind": "language", "label": "JavaScript" }
+  ],
+  "entry": "./index.mjs",
+  "min_sherpa_version": "0.1.0",
+  "author": "Sherpa Team",
+  "license": "MIT"
+}

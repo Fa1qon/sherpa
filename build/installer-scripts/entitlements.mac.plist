@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS hardened-runtime entitlements for Sherpa UI Client.
+  Referenced by electron-builder.yml: mac.entitlements + mac.entitlementsInherit.
+
+  Rationale per entitlement (T-L7-01 minimum set; T-L7-02 may extend):
+    - allow-jit / allow-unsigned-executable-memory:
+        Required by V8 (Electron's renderer) for JIT compilation under hardened
+        runtime; without these the app crashes on launch on signed/notarized
+        macOS builds.
+    - cs.disable-library-validation:
+        Allows loading native node modules (better-sqlite3, node-pty, sqlite-vec)
+        that are NOT signed with the same Team ID as the app shell. Standard for
+        Electron apps that bundle native modules.
+    - inherit:
+        Helper processes (renderer, GPU, utility) inherit the parent's
+        entitlements rather than each declaring their own.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+  <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+  <true/>
+  <key>com.apple.security.inherit</key>
+  <true/>
+</dict>
+</plist>

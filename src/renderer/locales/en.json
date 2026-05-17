@@ -1,0 +1,621 @@
+{
+  "app": {
+    "name": "Sherpa"
+  },
+  "fileviewer": {
+    "loading": "Loading…",
+    "error": "Error: no file path",
+    "binary": "Binary file — preview not available",
+    "preview": "Preview",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "csvEmpty": "No data",
+    "csvRows": "{{count}} rows",
+    "csvCols": "{{count}} columns"
+  },
+  "chrome": {
+    "menu": {
+      "project": "Project",
+      "task": "Task",
+      "view": "View",
+      "tools": "Tools",
+      "help": "Help"
+    },
+    "items": {
+      "project.new": "New project (open folder…)",
+      "project.openRecent": "Open recent",
+      "project.close": "Close project",
+      "project.settings": "Project settings",
+      "project.reloadMethodologies": "Reload methodologies",
+      "project.quit": "Quit Sherpa",
+      "task.new": "New task",
+      "task.newWithMethodology": "New task with methodology",
+      "task.find": "Find task",
+      "task.pause": "Pause active task",
+      "task.resume": "Resume task",
+      "task.close": "Close task",
+      "view.toggleLeftPanel": "Toggle Left Panel",
+      "view.toggleRightPanel": "Toggle Right Panel",
+      "view.zenMode": "Zen Mode",
+      "view.toggleArtifacts": "Toggle artifacts panel",
+      "view.toggleStage": "Toggle stage panel",
+      "view.togglePipeline": "Toggle pipeline",
+      "view.boardLayout": "Board layout",
+      "view.theme": "Theme",
+      "view.language": "Language",
+      "tools.methodologyLibrary": "Methodology library",
+      "tools.casesBrowser": "Cases browser",
+      "tools.reviewers": "Reviewers",
+      "tools.agentCli": "Agent CLI",
+      "tools.mcpServers": "MCP servers",
+      "tools.openSherpaFolder": "Open .sherpa folder",
+      "help.docs": "Documentation",
+      "help.shortcuts": "Keyboard shortcuts",
+      "help.reportBug": "Report bug",
+      "help.checkUpdates": "Check for updates",
+      "help.about": "About Sherpa",
+      "help.devtools": "Toggle Developer Tools"
+    },
+    "noProject": "no project"
+  },
+  "picker": {
+    "title": "Open a Sherpa project",
+    "subtitle": "Pick a folder. Sherpa will create .sherpa/ inside if missing.",
+    "addProject": "Add project (folder…)",
+    "newFromTemplate": "New from template",
+    "recent": "Recent",
+    "noRecent": "No recent projects yet.",
+    "errors": {
+      "pathNotFound": "The path no longer exists.",
+      "notADirectory": "Selected item is a file, not a folder.",
+      "sherpaMissing": "No .sherpa/ folder. Scaffold it now?",
+      "fsError": "Filesystem error: {{message}}"
+    }
+  },
+  "workspace": {
+    "empty": {
+      "title": "{{name}}",
+      "subtitle": "Project loaded. Tasks and methodologies arrive in the next plan.",
+      "newTask": "New task"
+    }
+  },
+  "task": {
+    "empty": "No task selected.",
+    "header": "{{methodology}} — stage {{stage}}",
+    "settings": {
+      "title_label": "Task title",
+      "title_placeholder": "What are we doing?"
+    },
+    "journal": {
+      "title": "Event log",
+      "explainer": "Engine event log — shows stage transitions, gate evaluations, tool calls. Useful for understanding why the methodology chose a particular path."
+    }
+  },
+  "taskWorkspace": {
+    "tab": {
+      "chat": "Chat",
+      "journal": "Event log"
+    },
+    "sidebar": {
+      "loading": "Loading…"
+    },
+    "resumeBanner": {
+      "title": "Task paused at stage {{stage}}.",
+      "resume": "Resume"
+    }
+  },
+  "stagesPanel": {
+    "title": "Stages",
+    "empty": "No stages.",
+    "status": {
+      "completed": "completed",
+      "current": "current",
+      "pending": "pending"
+    }
+  },
+  "gatePanel": {
+    "title": "Gate",
+    "empty": "No gate for this stage.",
+    "noStage": "No active stage.",
+    "verdict": {
+      "pass": "pass",
+      "ask": "waiting",
+      "fail": "fail"
+    }
+  },
+  "artifactsPanel": {
+    "title": "Artifacts",
+    "empty": "No artifacts yet.",
+    "refresh": "Refresh",
+    "close": "Close",
+    "loadError": "Failed to load: {{message}}"
+  },
+  "taskControls": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "tokens": "tokens",
+    "pauseFailed": "Pause failed: {{message}}",
+    "resumeFailed": "Resume failed: {{message}}",
+    "cancelFailed": "Cancel failed: {{message}}"
+  },
+  "traceViewer": {
+    "filter": {
+      "title": "Filter by kind"
+    },
+    "search": {
+      "placeholder": "Search stage or tool…"
+    },
+    "empty": "No trace events yet.",
+    "refresh": "Refresh",
+    "timing": {
+      "title": "Per-stage timing",
+      "stage": "Stage",
+      "duration": "Duration",
+      "durationMs": "{{ms}} ms"
+    },
+    "expand": "Expand event",
+    "collapse": "Collapse event"
+  },
+  "newTask": {
+    "title": "New task",
+    "taskTitle": "Title",
+    "settingsHint": "Methodology, effort, and other settings are available after creating the task.",
+    "creating": "Creating…",
+    "create": "Create",
+    "methodology": "Methodology",
+    "noMethodologies": "No methodologies in this project",
+    "cancel": "Cancel",
+    "start": "Start",
+    "starting": "Starting…",
+    "complianceReviewEnabled": "Generate compliance review on completion",
+    "complianceReviewHint": "Auto-runs methodology-compliance-reviewer at task completion. Output target: see Settings."
+  },
+  "taskSettings": {
+    "title": "Task settings",
+    "collapse": "Collapse",
+    "edit": "Edit settings",
+    "methodology": "Methodology",
+    "methodologyMode": {
+      "none": "Free chat",
+      "router": "Router",
+      "manual": "Manual"
+    },
+    "selectMethodology": "Select methodology…",
+    "routerPlaceholder": "Router not yet implemented. Falls back to free chat.",
+    "effort": "Effort",
+    "effortLevel": {
+      "fast": "Fast",
+      "normal": "Normal",
+      "thorough": "Thorough"
+    },
+    "responseMode": "Response mode",
+    "responseModeOption": {
+      "concise": "Concise",
+      "detailed": "Detailed"
+    },
+    "economyMode": "Mode",
+    "economyModeOption": {
+      "unlimited": "Full",
+      "budget": "Economy"
+    },
+    "strictnessMode": "Autonomy",
+    "strictnessModeOption": {
+      "autonomous": "Autonomous",
+      "standard": "Standard",
+      "careful": "Careful",
+      "verify_only": "Verify only"
+    },
+    "complianceReview": "Generate compliance review on completion",
+    "complianceChip": "compliance",
+    "involvement": "Involvement",
+    "involvementPreset": {
+      "autopilot": "Autopilot",
+      "standard": "Standard",
+      "control": "Control",
+      "manual": "Manual",
+      "custom": "Custom"
+    },
+    "involvementDesc": {
+      "autopilot": "Gates auto-pass; concise replies",
+      "standard": "Ask at key gates; detailed replies",
+      "control": "Ask at every gate; detailed replies",
+      "manual": "Every gate + ask before file edits"
+    },
+    "askBeforeEdit": "Ask before editing files"
+  },
+  "chat": {
+    "placeholder": "Type a message… (Enter to send, Shift+Enter for newline)",
+    "send": "Send",
+    "sending": "Sending…",
+    "working": "Agent is working…",
+    "usedTokens": "Used",
+    "tokensIn": "in",
+    "tokensOut": "out",
+    "showEnglish": "Show English",
+    "hideEnglish": "Hide English",
+    "counter": {
+      "tools": " tools",
+      "time": "s",
+      "tokens": " tokens",
+      "lines": " lines"
+    },
+    "agentThinking": "Thinking…",
+    "sessionDrawer": "Session",
+    "closeDrawer": "Close",
+    "noMessages": "No messages yet."
+  },
+  "settings": {
+    "title": "Settings",
+    "scope": { "project": "Project", "user": "User" },
+    "section": {
+      "general": "General",
+      "appearance": "Appearance",
+      "cost": "Cost tracking",
+      "compliance": "Compliance review",
+      "advanced": "Advanced",
+      "project": "Project",
+      "about": "About"
+    },
+    "project": {
+      "title": "Project Settings",
+      "noProject": "No project open",
+      "permissionMode": "Edit permissions",
+      "permissionMode.bypass": "Auto-approve all (bypass)",
+      "permissionMode.acceptEdits": "Ask before file edits",
+      "permissionMode.auto": "Claude Code default",
+      "defaultEffort": "Default effort",
+      "allowOutsideProjectAccess": "Allow file access outside project folder"
+    },
+    "appearance": {
+      "theme": "Theme",
+      "themeOption.dark": "Dark",
+      "themeOption.light": "Light",
+      "themeOption.auto": "Auto",
+      "language": "Language"
+    },
+    "general": {
+      "title": "General Settings",
+      "defaultAgentCli": "Default agent CLI"
+    },
+    "cost": {
+      "helper": "Useful for API users; subscription users typically leave this off.",
+      "showCost": "Show cost estimate alongside token counts",
+      "pricePerMillionInput": "Input price ($ / 1M tokens)",
+      "pricePerMillionOutput": "Output price ($ / 1M tokens)"
+    },
+    "compliance": {
+      "title": "Compliance review",
+      "outputMode": {
+        "off": "Off (disabled)",
+        "file": "Write to file",
+        "clipboard": "Copy to clipboard",
+        "both": "File and clipboard"
+      }
+    },
+    "eventLog": {
+      "title": "Event log",
+      "showToggle": "Show event journal panel"
+    },
+    "about": {
+      "version": "Version",
+      "license": "License"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "loading": "Loading…"
+  },
+  "tabs": {
+    "workspace": "Workspace",
+    "task": "Task",
+    "settings": "Settings",
+    "projectSettings": "Project settings",
+    "library": "Library",
+    "methodologyEditor": "Methodology",
+    "file": "File",
+    "discardConfirm": "Discard unsaved changes?"
+  },
+  "activityBar": {
+    "workspace": "Workspace",
+    "tasks": "Tasks",
+    "library": "Library",
+    "settings": "Settings",
+    "search": "Search",
+    "vcs": "Source Control",
+    "extensions": "Extensions",
+    "activeTasks": "{{count}} active"
+  },
+  "sidebar": {
+    "files": "Files",
+    "tasks": "Tasks",
+    "library": "Library",
+    "settings": "Settings",
+    "noProject": "Open a project to browse files.",
+    "noTasks": "No tasks yet."
+  },
+  "about": {
+    "title": "About Sherpa",
+    "version": "Version",
+    "license": "License",
+    "purpose": "Purpose",
+    "purposeText": "A visual orchestrator for AI-driven processes."
+  },
+  "library": {
+    "title": "Methodologies",
+    "search": "Search…",
+    "empty": "No methodologies in this project.",
+    "pickOne": "Select a methodology from the list.",
+    "mode": {
+      "view": "View",
+      "edit": "Edit"
+    },
+    "edit": {
+      "stageForm": "Stage",
+      "field": {
+        "id": "id",
+        "name": "name",
+        "mode": "mode",
+        "reviewers": "reviewers (comma-separated)",
+        "toolsRequired": "tools_required (comma-separated)",
+        "executionIsolation": "execution_isolation",
+        "inherit": "Inherit",
+        "confidenceThreshold": "confidence_threshold",
+        "confidenceThresholdHelp": "Engine blocks gate when measured confidence falls below this"
+      },
+      "idImmutable": "id is immutable after creation",
+      "execution": {
+        "inherit": "(inherit)",
+        "inline": "Inline (in the master process)",
+        "subagent": "Subagent",
+        "parallelSubagents": "Parallel subagents"
+      },
+      "mode": {
+        "auto": "auto",
+        "interactive": "interactive",
+        "gate": "gate"
+      },
+      "prompt": {
+        "system": "System prompt template (for AI)",
+        "systemHelp": "Placeholders: {project.name}, {meta.complexity}, {stage.name}",
+        "userView": "User-view template (for translation chat)",
+        "userViewHelp": "How the master chat presents this stage to the user — non-technical, in the project language.",
+        "roleSplit": "Role split",
+        "aiDoes": "AI does",
+        "humanDoes": "Human does"
+      },
+      "io": {
+        "inputs": "Inputs",
+        "output": "Output",
+        "outputPath": "Path",
+        "outputFormat": "Format",
+        "formatMarkdown": "Markdown",
+        "formatPlaintext": "Plain text",
+        "contextEssentials": "Context essentials",
+        "contextEssentialsHelp": "Artifacts the engine must keep in context across compaction.",
+        "addInput": "+ Add input",
+        "removeInput": "Remove",
+        "noUpstream": "No upstream stages yet"
+      },
+      "tools": {
+        "allowed": "allowed",
+        "required": "required",
+        "forbidden": "forbidden",
+        "none": "none",
+        "categoryFs": "Filesystem",
+        "categoryShell": "Shell",
+        "categoryWeb": "Web",
+        "categoryEditor": "Editor",
+        "categoryAgent": "Agent",
+        "defaultAllowedNote": "All tools are allowed by default. Use the checkboxes to require or forbid specific tools on this stage."
+      },
+      "reviewers": {
+        "explainer": "Reviewers available in the run-time reviewer menu on this stage. Items marked ★ are shown as recommended by default. None auto-run — the user picks from the menu.",
+        "recommendedTooltip": "Recommended in the run-time menu"
+      },
+      "phases": {
+        "sourceLegend": "Phase source",
+        "sourceInline": "Inline (methodology defines phases)",
+        "sourceFromArtifact": "From artifact (generated at runtime from a prior stage's output)",
+        "sourceStage": "Source stage",
+        "artifact": "Artifact",
+        "section": "Section",
+        "selectStage": "(select)",
+        "inheritMode": "(inherit)",
+        "addPhase": "+ Add phase",
+        "removePhase": "Remove",
+        "prompt": "Prompt",
+        "promptPlaceholder": "What the AI does in this phase (overrides stage prompt if set)."
+      },
+      "stuck": {
+        "policyLegend": "Stuck policy",
+        "maxAttempts": "Max attempts",
+        "escalationStepsLegend": "Escalation steps (in order)",
+        "errorCompaction": "Compact error to 1-2 sentences between cycles",
+        "trackerTemplate": "Tracker comment template",
+        "trackerHelp": "Used by the tracker plugin (Plan 9) to write a comment on the task when this stage completes.",
+        "engineNote": "The actual behaviour of each step is executed by the task engine.",
+        "steps": {
+          "changeTactics": "Change tactics",
+          "changeTacticsDesc": "Switch to a different approach — alternate algorithm, tool, or structure of the solution.",
+          "requestLogging": "Request logging",
+          "requestLoggingDesc": "Request logs or traces to diagnose the failure.",
+          "additionalResearch": "Additional research",
+          "additionalResearchDesc": "Look up additional documentation, search, or known cases.",
+          "debuggingPlaybook": "Debugging playbook",
+          "debuggingPlaybookDesc": "Run a debugging checklist (compile → test → assertions → DI).",
+          "userOverride": "User override",
+          "userOverrideDesc": "Ask the user which direction to take next."
+        }
+      },
+      "gate": {
+        "kind": "Gate kind",
+        "kindStandard": "Standard",
+        "kindComprehension": "Comprehension (AI asks a domain question)",
+        "items": "Items",
+        "addItem": "Add item",
+        "hardStop": "Hard stop",
+        "autoPassCondition": "Auto-pass condition",
+        "idLabel": "id",
+        "labelLabel": "Label",
+        "kindLabel": "Kind",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "removeItem": "Remove item",
+        "empty": "No items yet. Click '+ Add item' to add one.",
+        "kinds": {
+          "artifactWritten": "Artifact written",
+          "reviewerPass": "Reviewer pass",
+          "userConfirmed": "User confirmed",
+          "completenessCheck": "Completeness check",
+          "custom": "Custom"
+        }
+      },
+      "edge": "Edge",
+      "condition": "condition",
+      "maxCycles": "maxCycles",
+      "expr": "expr",
+      "label": "label (optional)",
+      "deleteEdge": "Delete edge",
+      "undo": "Undo",
+      "redo": "Redo",
+      "addStage": "+ Stage",
+      "autoLayout": "Auto-layout",
+      "validate": "Validate",
+      "save": "Save",
+      "validationFailed": "Validation failed",
+      "discardConfirm": "You have unsaved changes. Discard?",
+      "newMethodology": "+ New methodology",
+      "importFromText": "From description",
+      "newDialog": {
+        "title": "New methodology",
+        "id": "id (slug)",
+        "name": "name",
+        "create": "Create",
+        "cancel": "Cancel"
+      }
+    }
+  },
+  "tools": {
+    "builtin": {
+      "Read": { "label": "Read", "desc": "Read a file" },
+      "Write": { "label": "Write", "desc": "Write a file" },
+      "Edit": { "label": "Edit", "desc": "Edit a file" },
+      "Glob": { "label": "Glob", "desc": "File search by pattern" },
+      "Grep": { "label": "Grep", "desc": "Content search" },
+      "Bash": { "label": "Bash", "desc": "Run a shell command" },
+      "WebFetch": { "label": "WebFetch", "desc": "Fetch a URL" },
+      "WebSearch": { "label": "WebSearch", "desc": "Search the web" },
+      "Agent": { "label": "Agent", "desc": "Dispatch a sub-agent" },
+      "Skill": { "label": "Skill", "desc": "Invoke a skill" },
+      "TodoWrite": { "label": "TodoWrite", "desc": "Update a task list" }
+    }
+  },
+  "expressionBuilder": {
+    "parseError": "Parse error at position {{pos}}: {{msg}}"
+  },
+  "cases": {
+    "tab": "Cases",
+    "search_placeholder": "Search cases…",
+    "fts_label": "Text",
+    "vec_label": "Vector",
+    "new_case": "New case",
+    "field_title": "Title",
+    "field_summary": "Summary",
+    "field_content": "Content (markdown)",
+    "field_tags": "Tags (comma-separated)",
+    "field_confidence": "Confidence",
+    "save": "Save",
+    "delete": "Delete",
+    "no_results": "No cases found.",
+    "empty": "No cases yet. Create the first one.",
+    "vec_initializing": "Initializing vector model…",
+    "vec_hint": "Vector search available a few seconds after case creation."
+  },
+  "reviewers": {
+    "builtin": {
+      "requirements_quality": {
+        "name": "Requirements quality",
+        "desc": "Checks completeness, ambiguity, testability of requirements."
+      },
+      "requirements_traceability": {
+        "name": "Requirements traceability",
+        "desc": "Each requirement is traceable to a source."
+      },
+      "research_completeness": {
+        "name": "Research completeness",
+        "desc": "Required sources searched."
+      },
+      "design_security": {
+        "name": "Design security",
+        "desc": "Security review of the design."
+      },
+      "devils_advocate": {
+        "name": "Devil's advocate",
+        "desc": "Pokes holes in proposed approach."
+      },
+      "fact_checker": {
+        "name": "Fact checker",
+        "desc": "Verifies claims against sources."
+      },
+      "tone_reviewer": {
+        "name": "Tone reviewer",
+        "desc": "Checks tone matches target audience."
+      },
+      "structure_reviewer": {
+        "name": "Structure reviewer",
+        "desc": "Checks output structure against template."
+      },
+      "methodology_compliance": {
+        "name": "Methodology compliance",
+        "desc": "Reviews trace + IR + meta to judge whether the agent followed the methodology faithfully."
+      }
+    }
+  },
+  "stageBar": {
+    "step": "Stage {{n}}/{{total}}: {{name}}",
+    "done": "Methodology complete",
+    "starting": "Starting…"
+  },
+  "importer": {
+    "title": "Create methodology from description",
+    "descriptionLabel": "Describe your methodology",
+    "placeholder": "E.g.: A 3-stage code review process: 1) static analysis, 2) logic review, 3) acceptance gate...",
+    "generate": "Generate",
+    "generating": "Generating…",
+    "preview": "Generated file",
+    "save": "Save to project"
+  },
+  "editor": {
+    "antiPatterns": "Anti-patterns (one per line)",
+    "antiPatternsPlaceholder": "Patterns this methodology is NOT suited for..."
+  },
+  "stage": {
+    "roleSplit": {
+      "ai": "AI does",
+      "aiPlaceholder": "What the agent handles autonomously",
+      "human": "Human does",
+      "humanPlaceholder": "What the human must do or review"
+    }
+  },
+  "phase": {
+    "gateItems": "Gate items",
+    "addGateItem": "+ Gate item"
+  },
+  "tracker": {
+    "board": "Board",
+    "noProject": "No project open.",
+    "noBoard": "No board configured.",
+    "addTask": "Add task",
+    "settings": "Settings",
+    "settings.title": "Board Settings",
+    "settings.stages": "Stages",
+    "settings.addStage": "Add stage",
+    "settings.newStage": "New Stage"
+  }
+}

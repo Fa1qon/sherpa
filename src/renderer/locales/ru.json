@@ -1,0 +1,621 @@
+{
+  "app": {
+    "name": "Sherpa"
+  },
+  "fileviewer": {
+    "loading": "Загрузка…",
+    "error": "Ошибка: файл не указан",
+    "binary": "Бинарный файл — просмотр недоступен",
+    "preview": "Просмотр",
+    "edit": "Редактировать",
+    "save": "Сохранить",
+    "saving": "Сохранение…",
+    "cancel": "Отмена",
+    "csvEmpty": "Нет данных",
+    "csvRows": "{{count}} строк",
+    "csvCols": "{{count}} колонок"
+  },
+  "chrome": {
+    "menu": {
+      "project": "Проект",
+      "task": "Задача",
+      "view": "Вид",
+      "tools": "Инструменты",
+      "help": "Справка"
+    },
+    "items": {
+      "project.new": "Новый проект (открыть папку…)",
+      "project.openRecent": "Открыть недавний",
+      "project.close": "Закрыть проект",
+      "project.settings": "Настройки проекта",
+      "project.reloadMethodologies": "Перезагрузить методики",
+      "project.quit": "Выйти из Sherpa",
+      "task.new": "Новая задача",
+      "task.newWithMethodology": "Новая задача с методикой",
+      "task.find": "Найти задачу",
+      "task.pause": "Приостановить активную задачу",
+      "task.resume": "Возобновить",
+      "task.close": "Закрыть задачу",
+      "view.toggleLeftPanel": "Переключить левую панель",
+      "view.toggleRightPanel": "Переключить правую панель",
+      "view.zenMode": "Режим дзен",
+      "view.toggleArtifacts": "Панель документов",
+      "view.toggleStage": "Панель стадии",
+      "view.togglePipeline": "Pipeline",
+      "view.boardLayout": "Раскладка доски",
+      "view.theme": "Тема",
+      "view.language": "Язык",
+      "tools.methodologyLibrary": "Библиотека методик",
+      "tools.casesBrowser": "Кейсы",
+      "tools.reviewers": "Ревьюеры",
+      "tools.agentCli": "CLI агента",
+      "tools.mcpServers": "MCP серверы",
+      "tools.openSherpaFolder": "Открыть папку .sherpa",
+      "help.docs": "Документация",
+      "help.shortcuts": "Горячие клавиши",
+      "help.reportBug": "Сообщить об ошибке",
+      "help.checkUpdates": "Проверить обновления",
+      "help.about": "О Sherpa",
+      "help.devtools": "Инструменты разработчика"
+    },
+    "noProject": "нет проекта"
+  },
+  "picker": {
+    "title": "Открыть проект Sherpa",
+    "subtitle": "Выбери папку. Sherpa создаст внутри .sherpa/, если её нет.",
+    "addProject": "Добавить проект (папка…)",
+    "newFromTemplate": "Создать из шаблона",
+    "recent": "Недавние",
+    "noRecent": "Недавних проектов пока нет.",
+    "errors": {
+      "pathNotFound": "Путь больше не существует.",
+      "notADirectory": "Выбранный элемент — файл, а не папка.",
+      "sherpaMissing": "Папка .sherpa/ не найдена. Создать?",
+      "fsError": "Ошибка файловой системы: {{message}}"
+    }
+  },
+  "workspace": {
+    "empty": {
+      "title": "{{name}}",
+      "subtitle": "Проект загружен. Задачи и методики появятся в следующем плане.",
+      "newTask": "Новая задача"
+    }
+  },
+  "task": {
+    "empty": "Задача не выбрана.",
+    "header": "{{methodology}} — этап {{stage}}",
+    "settings": {
+      "title_label": "Название задачи",
+      "title_placeholder": "Что делаем?"
+    },
+    "journal": {
+      "title": "Журнал событий",
+      "explainer": "Журнал событий движка — переходы между этапами, оценка гейтов, вызовы инструментов. Помогает понять, почему методология выбрала данный путь."
+    }
+  },
+  "taskWorkspace": {
+    "tab": {
+      "chat": "Чат",
+      "journal": "Журнал событий"
+    },
+    "sidebar": {
+      "loading": "Загрузка…"
+    },
+    "resumeBanner": {
+      "title": "Задача приостановлена на этапе {{stage}}.",
+      "resume": "Продолжить"
+    }
+  },
+  "stagesPanel": {
+    "title": "Стадии",
+    "empty": "Стадий нет.",
+    "status": {
+      "completed": "завершена",
+      "current": "текущая",
+      "pending": "ожидание"
+    }
+  },
+  "gatePanel": {
+    "title": "Гейты",
+    "empty": "У этой стадии нет гейтов.",
+    "noStage": "Активной стадии нет.",
+    "verdict": {
+      "pass": "пройдено",
+      "ask": "ожидание",
+      "fail": "провал"
+    }
+  },
+  "artifactsPanel": {
+    "title": "Документы",
+    "empty": "Документов пока нет.",
+    "refresh": "Обновить",
+    "close": "Закрыть",
+    "loadError": "Не удалось загрузить: {{message}}"
+  },
+  "taskControls": {
+    "pause": "Пауза",
+    "resume": "Продолжить",
+    "cancel": "Отмена",
+    "tokens": "токенов",
+    "pauseFailed": "Не удалось приостановить: {{message}}",
+    "resumeFailed": "Не удалось возобновить: {{message}}",
+    "cancelFailed": "Ошибка отмены: {{message}}"
+  },
+  "traceViewer": {
+    "filter": {
+      "title": "Фильтр по типу"
+    },
+    "search": {
+      "placeholder": "Поиск по стадии или инструменту…"
+    },
+    "empty": "Событий трассы пока нет.",
+    "refresh": "Обновить",
+    "timing": {
+      "title": "Время по стадиям",
+      "stage": "Стадия",
+      "duration": "Длительность",
+      "durationMs": "{{ms}} мс"
+    },
+    "expand": "Развернуть событие",
+    "collapse": "Свернуть событие"
+  },
+  "newTask": {
+    "title": "Новая задача",
+    "taskTitle": "Заголовок",
+    "settingsHint": "Методология, уровень усилий и другие настройки доступны после создания задачи.",
+    "creating": "Создание…",
+    "create": "Создать",
+    "methodology": "Методология",
+    "noMethodologies": "В этом проекте нет методологий",
+    "cancel": "Отмена",
+    "start": "Старт",
+    "starting": "Запуск…",
+    "complianceReviewEnabled": "Сформировать отчёт о соответствии при завершении",
+    "complianceReviewHint": "Автоматически запускает ревьюер методологии при завершении задачи. Место вывода — см. Настройки."
+  },
+  "taskSettings": {
+    "title": "Настройки задачи",
+    "collapse": "Свернуть",
+    "edit": "Изменить настройки",
+    "methodology": "Методология",
+    "methodologyMode": {
+      "none": "Свободный чат",
+      "router": "Маршрутизатор",
+      "manual": "Выбрать вручную"
+    },
+    "selectMethodology": "Выберите методологию…",
+    "routerPlaceholder": "Маршрутизатор ещё не реализован. Используется свободный чат.",
+    "effort": "Усилие",
+    "effortLevel": {
+      "fast": "Быстро",
+      "normal": "Обычно",
+      "thorough": "Тщательно"
+    },
+    "responseMode": "Режим ответа",
+    "responseModeOption": {
+      "concise": "Краткий",
+      "detailed": "Подробный"
+    },
+    "economyMode": "Режим",
+    "economyModeOption": {
+      "unlimited": "Подробный",
+      "budget": "Экономный"
+    },
+    "strictnessMode": "Автономность",
+    "strictnessModeOption": {
+      "autonomous": "Автономный",
+      "standard": "Стандартный",
+      "careful": "Осторожный",
+      "verify_only": "Только проверка"
+    },
+    "complianceReview": "Создать проверку соответствия при завершении",
+    "complianceChip": "проверка",
+    "involvement": "Вовлечённость",
+    "involvementPreset": {
+      "autopilot": "Автопилот",
+      "standard": "Стандарт",
+      "control": "Контроль",
+      "manual": "Ручной",
+      "custom": "Вручную"
+    },
+    "involvementDesc": {
+      "autopilot": "Гейты авто-проходят; краткие ответы",
+      "standard": "Спрашивать на ключевых гейтах; подробные ответы",
+      "control": "Спрашивать на каждом гейте; подробные ответы",
+      "manual": "Каждый гейт + спрашивать перед правкой файлов"
+    },
+    "askBeforeEdit": "Спрашивать перед редактированием файлов"
+  },
+  "chat": {
+    "placeholder": "Введите сообщение… (Enter — отправить, Shift+Enter — перенос строки)",
+    "send": "Отправить",
+    "sending": "Отправка…",
+    "working": "Агент работает…",
+    "usedTokens": "Использовано",
+    "tokensIn": "вх",
+    "tokensOut": "исх",
+    "showEnglish": "Показать оригинал",
+    "hideEnglish": "Скрыть оригинал",
+    "counter": {
+      "tools": " инстр.",
+      "time": "с",
+      "tokens": " ток.",
+      "lines": " строк"
+    },
+    "agentThinking": "Думает…",
+    "sessionDrawer": "Сессия",
+    "closeDrawer": "Закрыть",
+    "noMessages": "Сообщений пока нет."
+  },
+  "settings": {
+    "title": "Настройки",
+    "scope": { "project": "Проект", "user": "Пользователь" },
+    "section": {
+      "general": "Основные",
+      "appearance": "Внешний вид",
+      "cost": "Учёт стоимости",
+      "compliance": "Отчёт о соответствии",
+      "advanced": "Дополнительно",
+      "project": "Проект",
+      "about": "О программе"
+    },
+    "project": {
+      "title": "Настройки проекта",
+      "noProject": "Нет открытого проекта",
+      "permissionMode": "Права редактирования",
+      "permissionMode.bypass": "Авто-подтверждение (bypass)",
+      "permissionMode.acceptEdits": "Спрашивать перед редактированием",
+      "permissionMode.auto": "По умолчанию Claude Code",
+      "defaultEffort": "Усилия по умолчанию",
+      "allowOutsideProjectAccess": "Разрешить доступ вне папки проекта"
+    },
+    "appearance": {
+      "theme": "Тема",
+      "themeOption.dark": "Тёмная",
+      "themeOption.light": "Светлая",
+      "themeOption.auto": "Авто",
+      "language": "Язык"
+    },
+    "general": {
+      "title": "Общие настройки",
+      "defaultAgentCli": "CLI-агент по умолчанию"
+    },
+    "cost": {
+      "helper": "Полезно для пользователей API; пользователям подписки обычно стоит оставить выключенным.",
+      "showCost": "Показывать оценку стоимости рядом с токенами",
+      "pricePerMillionInput": "Цена входных токенов ($ / 1М)",
+      "pricePerMillionOutput": "Цена выходных токенов ($ / 1М)"
+    },
+    "compliance": {
+      "title": "Отчёт о соответствии",
+      "outputMode": {
+        "off": "Выключено",
+        "file": "Записать в файл",
+        "clipboard": "Скопировать в буфер обмена",
+        "both": "Файл и буфер обмена"
+      }
+    },
+    "eventLog": {
+      "title": "Журнал событий",
+      "showToggle": "Показывать панель журнала событий"
+    },
+    "about": {
+      "version": "Версия",
+      "license": "Лицензия"
+    }
+  },
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "close": "Закрыть",
+    "loading": "Загрузка…"
+  },
+  "tabs": {
+    "workspace": "Рабочая область",
+    "task": "Задача",
+    "settings": "Настройки",
+    "projectSettings": "Настройки проекта",
+    "library": "Библиотека",
+    "methodologyEditor": "Методика",
+    "file": "Файл",
+    "discardConfirm": "Отменить несохранённые изменения?"
+  },
+  "activityBar": {
+    "workspace": "Рабочая область",
+    "tasks": "Задачи",
+    "library": "Библиотека",
+    "settings": "Настройки",
+    "search": "Поиск",
+    "vcs": "Контроль версий",
+    "extensions": "Расширения",
+    "activeTasks": "{{count}} активных"
+  },
+  "sidebar": {
+    "files": "Файлы",
+    "tasks": "Задачи",
+    "library": "Библиотека",
+    "settings": "Настройки",
+    "noProject": "Откройте проект, чтобы просмотреть файлы.",
+    "noTasks": "Задач пока нет."
+  },
+  "about": {
+    "title": "О Sherpa",
+    "version": "Версия",
+    "license": "Лицензия",
+    "purpose": "Назначение",
+    "purposeText": "Визуальный оркестратор процессов с ИИ-агентами."
+  },
+  "library": {
+    "title": "Методики",
+    "search": "Поиск…",
+    "empty": "В этом проекте нет методик.",
+    "pickOne": "Выбери методику в списке.",
+    "mode": {
+      "view": "Просмотр",
+      "edit": "Редактор"
+    },
+    "edit": {
+      "stageForm": "Стадия",
+      "field": {
+        "id": "id",
+        "name": "имя",
+        "mode": "режим",
+        "reviewers": "ревьюеры (через запятую)",
+        "toolsRequired": "tools_required (через запятую)",
+        "executionIsolation": "Изоляция выполнения",
+        "inherit": "Наследовать",
+        "confidenceThreshold": "Порог уверенности",
+        "confidenceThresholdHelp": "Движок блокирует гейты, если измеренная уверенность опускается ниже этого значения"
+      },
+      "idImmutable": "id нельзя изменить после создания",
+      "execution": {
+        "inherit": "(наследовать)",
+        "inline": "Inline (в основном процессе)",
+        "subagent": "Подагент",
+        "parallelSubagents": "Параллельные подагенты"
+      },
+      "mode": {
+        "auto": "авто",
+        "interactive": "интерактивный",
+        "gate": "гейты"
+      },
+      "prompt": {
+        "system": "Системный промпт (для ИИ)",
+        "systemHelp": "Плейсхолдеры: {project.name}, {meta.complexity}, {stage.name}",
+        "userView": "Шаблон для пользователя (для чата-переводчика)",
+        "userViewHelp": "Как мастер-чат представляет эту стадию пользователю — нетехнически, на языке проекта.",
+        "roleSplit": "Разделение ролей",
+        "aiDoes": "ИИ делает",
+        "humanDoes": "Человек делает"
+      },
+      "io": {
+        "inputs": "Входы",
+        "output": "Выход",
+        "outputPath": "Путь",
+        "outputFormat": "Формат",
+        "formatMarkdown": "Markdown",
+        "formatPlaintext": "Обычный текст",
+        "contextEssentials": "Существенный контекст",
+        "contextEssentialsHelp": "Документы, которые движок обязан удерживать в контексте при сжатии.",
+        "addInput": "+ Добавить вход",
+        "removeInput": "Удалить",
+        "noUpstream": "Нет предшествующих стадий"
+      },
+      "tools": {
+        "allowed": "разрешено",
+        "required": "обязательно",
+        "forbidden": "запрещено",
+        "none": "нет",
+        "categoryFs": "Файлы",
+        "categoryShell": "Командная строка",
+        "categoryWeb": "Веб",
+        "categoryEditor": "Редактор",
+        "categoryAgent": "Агент",
+        "defaultAllowedNote": "По умолчанию все инструменты разрешены. Используйте флажки, чтобы пометить инструмент как обязательный или запрещённый на этой стадии."
+      },
+      "reviewers": {
+        "explainer": "Ревьюеры, доступные в меню ревьюеров на этой стадии во время выполнения. Помеченные ★ показаны как рекомендованные по умолчанию. Автоматически никто не запускается — пользователь выбирает в меню.",
+        "recommendedTooltip": "Рекомендован в меню при выполнении"
+      },
+      "phases": {
+        "sourceLegend": "Источник фаз",
+        "sourceInline": "Inline (методика определяет фазы)",
+        "sourceFromArtifact": "Из документа (генерируется во время выполнения из выхода предыдущей стадии)",
+        "sourceStage": "Исходная стадия",
+        "artifact": "Документ",
+        "section": "Раздел",
+        "selectStage": "(выберите)",
+        "inheritMode": "(наследовать)",
+        "addPhase": "+ Добавить фазу",
+        "removePhase": "Удалить",
+        "prompt": "Промпт",
+        "promptPlaceholder": "Что делает ИИ в этой фазе (переопределяет промпт стадии, если задано)."
+      },
+      "stuck": {
+        "policyLegend": "Политика «застрял»",
+        "maxAttempts": "Макс. попыток",
+        "escalationStepsLegend": "Шаги эскалации (по порядку)",
+        "errorCompaction": "Сжимать ошибку до 1-2 предложений между циклами",
+        "trackerTemplate": "Шаблон комментария в трекере",
+        "trackerHelp": "Используется плагином трекера (План 9), чтобы записать комментарий к задаче по завершению этой стадии.",
+        "engineNote": "Фактическое поведение каждого шага реализуется движком задачи.",
+        "steps": {
+          "changeTactics": "Сменить тактику",
+          "changeTacticsDesc": "Поменять подход — другой алгоритм, инструмент или структура решения.",
+          "requestLogging": "Запросить логи",
+          "requestLoggingDesc": "Запросить логи или трассировки для диагностики.",
+          "additionalResearch": "Дополнительное исследование",
+          "additionalResearchDesc": "Дополнительное исследование — поиск, документация, известные кейсы.",
+          "debuggingPlaybook": "Плейбук отладки",
+          "debuggingPlaybookDesc": "Прогнать debugging-чеклист (компиляция → тест → ассерты → DI).",
+          "userOverride": "Решение пользователя",
+          "userOverrideDesc": "Спросить пользователя — каким путём идти дальше."
+        }
+      },
+      "gate": {
+        "kind": "Тип ворот",
+        "kindStandard": "Стандартные",
+        "kindComprehension": "Comprehension (ИИ задаёт доменный вопрос)",
+        "items": "Пункты",
+        "addItem": "Добавить пункт",
+        "hardStop": "Жёсткий стоп",
+        "autoPassCondition": "Условие авто-прохода",
+        "idLabel": "id",
+        "labelLabel": "Метка",
+        "kindLabel": "Вид",
+        "moveUp": "Вверх",
+        "moveDown": "Вниз",
+        "removeItem": "Удалить пункт",
+        "empty": "Пока нет пунктов. Нажмите «+ Добавить пункт».",
+        "kinds": {
+          "artifactWritten": "Документ записан",
+          "reviewerPass": "Ревьюер прошёл",
+          "userConfirmed": "Пользователь подтвердил",
+          "completenessCheck": "Проверка полноты",
+          "custom": "Произвольный"
+        }
+      },
+      "edge": "Ребро",
+      "condition": "условие",
+      "maxCycles": "maxCycles",
+      "expr": "expr",
+      "label": "метка (необязательно)",
+      "deleteEdge": "Удалить ребро",
+      "undo": "Отменить",
+      "redo": "Вернуть",
+      "addStage": "+ Стадия",
+      "autoLayout": "Авто-разметка",
+      "validate": "Проверить",
+      "save": "Сохранить",
+      "validationFailed": "Ошибки валидации",
+      "discardConfirm": "Есть несохранённые изменения. Отбросить?",
+      "newMethodology": "+ Новая методика",
+      "importFromText": "Из описания",
+      "newDialog": {
+        "title": "Новая методика",
+        "id": "id (слаг)",
+        "name": "имя",
+        "create": "Создать",
+        "cancel": "Отмена"
+      }
+    }
+  },
+  "tools": {
+    "builtin": {
+      "Read": { "label": "Чтение", "desc": "Прочитать файл" },
+      "Write": { "label": "Запись", "desc": "Записать файл" },
+      "Edit": { "label": "Правка", "desc": "Редактировать файл" },
+      "Glob": { "label": "Glob", "desc": "Поиск файлов по шаблону" },
+      "Grep": { "label": "Grep", "desc": "Поиск по содержимому" },
+      "Bash": { "label": "Bash", "desc": "Выполнить shell-команду" },
+      "WebFetch": { "label": "WebFetch", "desc": "Получить URL" },
+      "WebSearch": { "label": "WebSearch", "desc": "Поиск в вебе" },
+      "Agent": { "label": "Agent", "desc": "Запустить подагент" },
+      "Skill": { "label": "Skill", "desc": "Вызвать навык" },
+      "TodoWrite": { "label": "TodoWrite", "desc": "Обновить список задач" }
+    }
+  },
+  "expressionBuilder": {
+    "parseError": "Ошибка разбора, позиция {{pos}}: {{msg}}"
+  },
+  "cases": {
+    "tab": "Кейсы",
+    "search_placeholder": "Поиск кейсов…",
+    "fts_label": "Текст",
+    "vec_label": "Вектор",
+    "new_case": "Новый кейс",
+    "field_title": "Заголовок",
+    "field_summary": "Краткое описание",
+    "field_content": "Содержание (markdown)",
+    "field_tags": "Теги (через запятую)",
+    "field_confidence": "Уверенность",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "no_results": "Кейсы не найдены.",
+    "empty": "Кейсов пока нет. Создайте первый.",
+    "vec_initializing": "Инициализация векторной модели…",
+    "vec_hint": "Векторный поиск доступен через несколько секунд после создания кейса."
+  },
+  "reviewers": {
+    "builtin": {
+      "requirements_quality": {
+        "name": "Качество требований",
+        "desc": "Проверяет полноту, неоднозначность, тестируемость требований."
+      },
+      "requirements_traceability": {
+        "name": "Прослеживаемость требований",
+        "desc": "Каждое требование прослеживается до источника."
+      },
+      "research_completeness": {
+        "name": "Полнота исследования",
+        "desc": "Все нужные источники проверены."
+      },
+      "design_security": {
+        "name": "Безопасность дизайна",
+        "desc": "Ревью безопасности дизайна."
+      },
+      "devils_advocate": {
+        "name": "Адвокат дьявола",
+        "desc": "Ищет дыры в предложенном подходе."
+      },
+      "fact_checker": {
+        "name": "Фактчекер",
+        "desc": "Проверяет утверждения по источникам."
+      },
+      "tone_reviewer": {
+        "name": "Тон",
+        "desc": "Проверяет, что тон соответствует целевой аудитории."
+      },
+      "structure_reviewer": {
+        "name": "Структура",
+        "desc": "Проверяет структуру вывода по шаблону."
+      },
+      "methodology_compliance": {
+        "name": "Соответствие методике",
+        "desc": "Анализирует трассу, IR и meta, чтобы оценить, насколько точно агент следовал методике."
+      }
+    }
+  },
+  "stageBar": {
+    "step": "Этап {{n}}/{{total}}: {{name}}",
+    "done": "Методика завершена",
+    "starting": "Начало…"
+  },
+  "importer": {
+    "title": "Создать методику из описания",
+    "descriptionLabel": "Опишите вашу методику",
+    "placeholder": "Например: 3-этапный процесс ревью кода: 1) статический анализ, 2) логическое ревью, 3) гейт приёмки...",
+    "generate": "Сгенерировать",
+    "generating": "Генерирую…",
+    "preview": "Сгенерированный файл",
+    "save": "Сохранить в проект"
+  },
+  "editor": {
+    "antiPatterns": "Антипаттерны (по одному на строку)",
+    "antiPatternsPlaceholder": "Случаи, для которых эта методика НЕ подходит..."
+  },
+  "stage": {
+    "roleSplit": {
+      "ai": "ИИ делает",
+      "aiPlaceholder": "Что агент выполняет самостоятельно",
+      "human": "Человек делает",
+      "humanPlaceholder": "Что человек должен сделать или проверить"
+    }
+  },
+  "phase": {
+    "gateItems": "Критерии гейта",
+    "addGateItem": "+ Критерий"
+  },
+  "tracker": {
+    "board": "Доска",
+    "noProject": "Проект не открыт.",
+    "noBoard": "Доска не настроена.",
+    "addTask": "Добавить задачу",
+    "settings": "Настройки",
+    "settings.title": "Настройки доски",
+    "settings.stages": "Стадии",
+    "settings.addStage": "Добавить стадию",
+    "settings.newStage": "Новая стадия"
+  }
+}

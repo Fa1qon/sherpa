@@ -1,0 +1,58 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  overflow: auto;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--bg-app);
+  gap: 12px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.zoomBtn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--fg-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.zoomBtn:hover { background: var(--bg-hover); }
+
+.zoomLabel {
+  font-size: var(--font-size-xs);
+  color: var(--fg-muted);
+  min-width: 44px;
+  text-align: center;
+}
+
+.imageWrap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s;
+  image-rendering: auto;
+}

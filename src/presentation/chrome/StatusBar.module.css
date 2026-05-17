@@ -1,0 +1,14 @@
+.statusBar {
+  height: 22px;
+  background: var(--bg-elevated);
+  color: var(--fg-muted);
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  user-select: none;
+}
+.left { display: flex; align-items: center; height: 100%; }
+.right { display: flex; align-items: center; height: 100%; }

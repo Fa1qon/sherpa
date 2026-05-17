@@ -1,0 +1,13 @@
+{
+  "$schema": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "id": "ru.sherpa.lang-typescript",
+  "version": "1.0.0",
+  "description": "TypeScript language pack — syntax highlighting via @codemirror/lang-javascript with TypeScript dialect.",
+  "capabilities": [
+    { "kind": "language", "label": "TypeScript" }
+  ],
+  "entry": "./index.mjs",
+  "min_sherpa_version": "0.1.0",
+  "author": "Sherpa Team",
+  "license": "MIT"
+}

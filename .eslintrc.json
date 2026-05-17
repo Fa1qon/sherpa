@@ -1,0 +1,168 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint", "import"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
+      }
+    }
+  },
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["src/main/*", "src/renderer/*"],
+            "message": "Domain/application/ports must NOT import from main or renderer (Hexagonal-Lite dependency rule per ADR-001)"
+          }
+        ]
+      }
+    ],
+    "import/no-restricted-paths": [
+      "error",
+      {
+        "zones": [
+          {
+            "target": "./src/core/domain",
+            "from": "./src/core/application",
+            "message": "ADR-001: core/domain MUST NOT import from core/application (Domain has no outward dependencies)"
+          },
+          {
+            "target": "./src/core/domain",
+            "from": "./src/core/adapters",
+            "message": "ADR-001: core/domain MUST NOT import from core/adapters"
+          },
+          {
+            "target": "./src/core/domain",
+            "from": "./src/core/ports",
+            "message": "ADR-001: core/domain MUST NOT import from core/ports"
+          },
+          {
+            "target": "./src/core/domain",
+            "from": "./src/core/infrastructure",
+            "message": "ADR-001: core/domain MUST NOT import from core/infrastructure"
+          },
+          {
+            "target": "./src/core/domain",
+            "from": "./src/main",
+            "message": "ADR-001: core/domain MUST NOT import from src/main"
+          },
+          {
+            "target": "./src/core/domain",
+            "from": "./src/renderer",
+            "message": "ADR-001: core/domain MUST NOT import from src/renderer"
+          },
+          {
+            "target": "./src/core/domain",
+            "from": "./src/presentation",
+            "message": "ADR-001: core/domain MUST NOT import from src/presentation"
+          },
+          {
+            "target": "./src/core/application",
+            "from": "./src/core/adapters",
+            "message": "ADR-001: core/application MUST NOT import from core/adapters (Application depends only on ports)"
+          },
+          {
+            "target": "./src/core/application",
+            "from": "./src/main",
+            "message": "ADR-001: core/application MUST NOT import from src/main"
+          },
+          {
+            "target": "./src/core/application",
+            "from": "./src/renderer",
+            "message": "ADR-001: core/application MUST NOT import from src/renderer"
+          },
+          {
+            "target": "./src/core/application",
+            "from": "./src/presentation",
+            "message": "ADR-001: core/application MUST NOT import from src/presentation"
+          },
+          {
+            "target": "./src/core/ports",
+            "from": "./src/core/adapters",
+            "message": "ADR-001: core/ports MUST NOT import from core/adapters"
+          },
+          {
+            "target": "./src/core/ports",
+            "from": "./src/core/application",
+            "message": "ADR-001: core/ports MUST NOT import from core/application"
+          },
+          {
+            "target": "./src/core/ports",
+            "from": "./src/main",
+            "message": "ADR-001: core/ports MUST NOT import from src/main"
+          },
+          {
+            "target": "./src/core/ports",
+            "from": "./src/renderer",
+            "message": "ADR-001: core/ports MUST NOT import from src/renderer"
+          },
+          {
+            "target": "./src/core/ports",
+            "from": "./src/presentation",
+            "message": "ADR-001: core/ports MUST NOT import from src/presentation"
+          },
+          {
+            "target": "./src/core/adapters",
+            "from": "./src/main",
+            "message": "ADR-001: core/adapters MUST NOT import from src/main"
+          },
+          {
+            "target": "./src/core/adapters",
+            "from": "./src/renderer",
+            "message": "ADR-001: core/adapters MUST NOT import from src/renderer"
+          },
+          {
+            "target": "./src/core/adapters",
+            "from": "./src/presentation",
+            "message": "ADR-001: core/adapters MUST NOT import from src/presentation"
+          },
+          {
+            "target": "./src/main",
+            "from": "./src/renderer",
+            "message": "ADR-001: src/main MUST NOT import from src/renderer (presentation boundary)"
+          },
+          {
+            "target": "./src/main",
+            "from": "./src/presentation",
+            "message": "ADR-001: src/main MUST NOT import from src/presentation (presentation boundary)"
+          },
+          {
+            "target": "./src/renderer",
+            "from": "./src/main",
+            "except": ["./ipc/channels.ts"],
+            "message": "ADR-001: src/renderer MUST NOT import from src/main (presentation boundary; use IPC). Type-only imports of src/main/ipc/channels.ts are allowed."
+          },
+          {
+            "target": "./src/presentation",
+            "from": "./src/main",
+            "except": ["./ipc/channels.ts"],
+            "message": "ADR-001: src/presentation MUST NOT import from src/main (presentation boundary; use IPC). Type-only imports of src/main/ipc/channels.ts are allowed."
+          }
+        ]
+      }
+    ]
+  },
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "bin",
+    ".sherpa-build",
+    "tests/visual/baselines",
+    "tests/fixtures",
+    "coverage",
+    "dist-electron",
+    "out"
+  ]
+}

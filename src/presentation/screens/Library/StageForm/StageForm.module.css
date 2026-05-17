@@ -1,0 +1,526 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-left: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  min-width: 280px;
+}
+
+.tabsRoot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tabBar {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-default);
+  overflow-x: auto;
+}
+
+.tabButton {
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--fg-muted);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  background: var(--bg-hover);
+  color: var(--fg-default);
+}
+
+.tabButton[data-active="true"] {
+  color: var(--fg-default);
+  border-bottom-color: var(--accent);
+}
+
+.tabBadge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: var(--bg-pressed);
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.tabPanel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.tabBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.fieldLabel {
+  font-weight: 500;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--fg-default);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.help {
+  color: var(--fg-muted);
+  font-size: 11px;
+}
+
+.placeholder {
+  color: var(--fg-muted);
+  font-style: italic;
+  padding: 24px;
+  text-align: center;
+}
+
+.idReadonly {
+  background: var(--bg-app) !important;
+  color: var(--fg-muted) !important;
+  cursor: not-allowed;
+  font-style: italic;
+}
+
+.codeArea {
+  font-family: var(--font-mono, monospace);
+}
+
+.fieldset {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.fieldset legend {
+  font-size: 11px;
+  color: var(--fg-muted);
+  padding: 0 4px;
+}
+
+.row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.row > select,
+.row > input {
+  flex: 1;
+  min-width: 0;
+}
+
+.row > button {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 0 6px;
+  font-size: 14px;
+}
+
+.row > button:hover {
+  color: var(--fg-default);
+}
+
+.addButton {
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--fg-default);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.checkbox {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  padding: 2px 0;
+}
+
+.checkbox input {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.toolsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toolsTab .note {
+  font-size: 11px;
+  color: var(--fg-muted);
+  margin: 0 0 8px 0;
+}
+
+.toolsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.toolsTable th {
+  font-weight: 500;
+  font-size: 10px;
+  color: var(--fg-muted);
+  text-align: center;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+.toolsTable td {
+  padding: 4px 4px;
+  border-top: 1px solid var(--border-default);
+  vertical-align: middle;
+}
+
+.toolId {
+  font-family: var(--font-mono, monospace);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 80px;
+}
+
+.toolDesc {
+  color: var(--fg-muted);
+}
+
+.toolCheckCell {
+  width: 60px;
+  text-align: center;
+}
+
+.toolCheckCell input {
+  margin: 0;
+}
+
+.reviewersTab {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.explainer {
+  font-size: 11px;
+  color: var(--fg-muted);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.reviewerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  padding: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  align-items: start;
+}
+
+.reviewerRow[data-selected="true"] {
+  background: var(--bg-hover);
+}
+
+.reviewerRow .checkbox {
+  grid-column: 1;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.reviewerRow strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reviewerRow small {
+  color: var(--fg-muted);
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+.starButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--fg-muted);
+  padding: 0 4px;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.starButton[data-active="true"] {
+  color: gold;
+}
+
+.reviewerDesc {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.phasesTab {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.phasesTab fieldset {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.phasesTab legend {
+  font-size: 11px;
+  color: var(--fg-muted);
+  padding: 0 4px;
+}
+
+.phasesTab > fieldset > label {
+  display: block;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.phaseList {
+  list-style: decimal;
+  padding-left: 18px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.phaseRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.phaseRow:last-child {
+  border-bottom: none;
+}
+
+.phaseHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr 90px auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.phaseHeader > input,
+.phaseHeader > select {
+  width: 100%;
+  min-width: 0;
+}
+
+.phaseHeader > button {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 0 6px;
+  font-size: 14px;
+}
+
+.phaseDetail {
+  padding-left: 4px;
+}
+
+.phaseDetail summary {
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-size: 11px;
+  padding: 2px 0;
+}
+
+.phaseDetail textarea {
+  width: 100%;
+  margin-top: 4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--fg-default);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.stuckTab {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stuckTab fieldset {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.stuckTab legend {
+  font-size: 11px;
+  color: var(--fg-muted);
+  padding: 0 4px;
+}
+
+.stuckTab > fieldset > label {
+  display: block;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.stuckTab > fieldset > fieldset {
+  margin: 8px 0;
+}
+
+.stepRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0;
+}
+
+.stepRow > .checkbox strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.stepDesc {
+  color: var(--fg-muted);
+  font-size: 11px;
+  padding-left: 22px;
+  line-height: 1.4;
+}
+
+.engineNote {
+  margin: 12px 0 0 0;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--fg-muted);
+  background: var(--bg-app);
+  border-radius: 4px;
+  border-left: 2px solid var(--accent);
+}
+
+.gateTab {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateItemsHeader {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--fg-default);
+}
+
+.gateItemList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gateItem {
+  padding: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gateItemHeader {
+  display: grid;
+  grid-template-columns: 80px 1fr auto auto auto auto;
+  gap: 4px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.gateItemHeader > input,
+.gateItemHeader > select {
+  min-width: 0;
+  font-size: 11px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--fg-default);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.gateItemHeader > button {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.gateItemHeader > button:hover { color: var(--fg-default); }
+.gateItemHeader > button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.reorderButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reorderButtons button {
+  font-size: 9px;
+  padding: 0 4px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+}
+
+.gateItemDetails {
+  margin-top: 4px;
+}
+
+.gateItemDetails summary {
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-size: 11px;
+  padding: 2px 0;
+}

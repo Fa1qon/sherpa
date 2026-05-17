@@ -1,0 +1,276 @@
+# Sherpa UI Client — production release workflow (T-L7-04).
+#
+# ACs covered (per phase-7-release.md §T-L7-04):
+#   AC-T-L7-04-1 (NF8): On `v*` tag → cross-platform build → sign → publish
+#                       GitHub Release.
+#   AC-T-L7-04-2:       SHA256 published per artifact (uploaded as
+#                       `<artifact>.sha256` companion files).
+#   AC-T-L7-04-3:       Workflow tested on alpha tag (e.g. v0.1.0-alpha.1).
+#   AC-T-L7-04-4:       Failure mode — GitHub down → artifacts saved as
+#                       workflow-run artifacts (24h retention) for manual
+#                       publish later.
+#
+# Companion files / scripts (all owned by T-L7-04):
+#   scripts/inject-release-key.mjs   — pre-build TS source rewrite that
+#     injects `SHERPA_RELEASE_PUBLIC_KEY` into the
+#     `RELEASE_PUBLIC_KEY` slot in
+#     `src/core/adapters/updater/signing_key.ts`. Runs BEFORE
+#     `npm run build:main`; the prebuild guard
+#     (`scripts/check-signing-key.mjs`) detects the non-null literal and
+#     exits 0 (NF27 — build-time embedding, hermetic).
+#   scripts/sign-release-manifest.mjs — Ed25519 manifest signer that uses
+#     `SHERPA_RELEASE_PRIVATE_KEY` to produce a signed `manifest.json`
+#     matching the `UpdateManifest` shape consumed by
+#     `src/core/adapters/updater/manifest_verifier.ts`.
+#
+# Required GitHub Actions secrets (configured by user offline; see
+# `docs/RELEASE.md` for keypair-generation procedure):
+#   SHERPA_RELEASE_PRIVATE_KEY  — Ed25519 private key (PEM PKCS#8). Multi-
+#                                 line; create the secret with the full
+#                                 PEM including BEGIN/END markers.
+#   SHERPA_RELEASE_PUBLIC_KEY   — Ed25519 public key (PEM SPKI). Could be
+#                                 derived from the private key but lives
+#                                 as a separate secret for clarity / so
+#                                 that key-rotation reviews don't need
+#                                 the private half.
+#
+# Optional Authenticode / notarization secrets (NOT in T-L7-04 scope per
+# spec — `phase-7-release.md` AC-T-L7-04-1 says "sign" without specifying
+# OS-level code signing; deferred per `cert_renewal_playbook` §8 first-cert
+# self-signed MVP-1):
+#   WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD     — wired but unset by default
+#   APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD  — wired but unset by default
+#   APPLE_TEAM_ID                           — wired but unset by default
+#
+# Trigger: `release: published` (after a v* tag is pushed and a draft
+# release is created, the user clicks "Publish") OR `workflow_dispatch`
+# with manual version input. We don't trigger on the bare tag push because
+# the user may want to inspect the workflow plan / draft a changelog
+# first; publishing is the explicit "go" signal. AC-T-L7-04-3 (alpha
+# tagging) → user pushes `v0.1.0-alpha.1` tag, drafts a release manually,
+# clicks Publish.
+
+name: Release (production)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag / version to build (e.g. v0.1.0-alpha.1). Must match a pushed tag.'
+        required: true
+        type: string
+
+# Permissions — explicit per AC-T-L7-04-1 (publish to GitHub Releases).
+# `contents: write` is the minimum required for `gh release upload`.
+permissions:
+  contents: write
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # 1) Build + sign per platform.
+  #    Each leg produces:
+  #      - One installer artifact (Win NSIS / Mac DMG / Linux AppImage+deb)
+  #      - <artifact>.sha256 (AC-T-L7-04-2)
+  #      - manifest.json (Ed25519-signed; consumed by electron-updater)
+  # ──────────────────────────────────────────────────────────────────────
+  build-and-sign:
+    name: Build & Sign (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            dist_script: dist:lin
+          - os: windows-latest
+            platform: win
+            dist_script: dist:win
+          - os: macos-latest
+            platform: mac
+            dist_script: dist:mac
+    runs-on: ${{ matrix.os }}
+    # AUTO-W11 (per AC-T-L6-C-7): Windows is the primary target. Mac/Lin
+    # legs are advisory until cross-platform shake-out completes.
+    continue-on-error: ${{ matrix.os != 'windows-latest' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-release-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      # ─── T-L7-04 build-time signing-key injection ─────────────────────
+      #
+      # Rewrites `RELEASE_PUBLIC_KEY` in `src/core/adapters/updater/
+      # signing_key.ts` from `null` → the production PEM. The prebuild
+      # guard then detects the non-null literal and exits 0. NF27
+      # (signing-key embedding) — happens BEFORE `npm run build:main` so
+      # the embed propagates into the bundled JS that ships in the asar.
+      - name: Inject release public key
+        env:
+          SHERPA_RELEASE_PUBLIC_KEY: ${{ secrets.SHERPA_RELEASE_PUBLIC_KEY }}
+        run: node scripts/inject-release-key.mjs
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build main process (Electron CJS)
+        # Prebuild hook auto-runs `check-signing-key.mjs` which now exits
+        # 0 because the placeholder hash check is bypassed when the
+        # injected `RELEASE_PUBLIC_KEY` is non-null.
+        run: npm run build:main
+
+      - name: Build renderer (Vite)
+        run: npm run build
+
+      # ─── electron-builder per-platform packaging ──────────────────────
+      #
+      # `--publish never` because we control upload manually below (with
+      # SHA256 companion + signed manifest). electron-builder's built-in
+      # `--publish always` uploads installers but does NOT sign our
+      # ed25519 manifest, which is the trust root the runtime updater
+      # actually verifies.
+      - name: Run electron-builder (${{ matrix.platform }})
+        env:
+          # OS code-signing secrets — wired but optional per T-L7-04 spec
+          # scope (manifest-only signing is the AC-1 minimum). When the
+          # user provisions a Win Authenticode cert / Apple Developer ID,
+          # populate these secrets and the next line picks them up.
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Set to 'true' to skip notarization on macOS until the Apple
+          # Developer ID is configured. AC-T-L7-04 spec scope is
+          # manifest-only; OS-level signing is a follow-up.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run ${{ matrix.dist_script }}
+
+      # ─── AC-T-L7-04-2: per-artifact SHA256 ────────────────────────────
+      - name: Compute per-artifact SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -d out ]; then
+            echo "::warning::no out/ directory; electron-builder may have failed"
+            exit 0
+          fi
+          # Compute sha256 for every installer artifact at the top of out/
+          # (NSIS .exe, DMG, AppImage, deb, blockmaps, latest*.yml etc.)
+          cd out
+          for f in $(find . -maxdepth 2 -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' -o -name '*.yml' -o -name '*.blockmap' \) | sort); do
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$f" > "$f.sha256"
+            else
+              shasum -a 256 "$f" > "$f.sha256"
+            fi
+            echo "$(cat "$f.sha256")"
+          done
+
+      # ─── Sign the update manifest with the Ed25519 release key ────────
+      #
+      # The signed manifest is what `manifest_verifier.verifyManifest()`
+      # reads at update-apply time. One per-OS manifest, naming
+      # `manifest-<platform>.json`, plus a primary `manifest.json` on
+      # Windows (the primary target).
+      - name: Sign update manifest
+        shell: bash
+        env:
+          SHERPA_RELEASE_PRIVATE_KEY: ${{ secrets.SHERPA_RELEASE_PRIVATE_KEY }}
+          SHERPA_RELEASE_PUBLIC_KEY: ${{ secrets.SHERPA_RELEASE_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          if [ ! -d out ]; then
+            echo "::warning::no out/ directory; skipping manifest sign step"
+            exit 0
+          fi
+          mkdir -p out/manifest
+          # Pick the primary installer artifact for this platform.
+          case "${{ matrix.platform }}" in
+            win)
+              ARTIFACT=$(find out -maxdepth 1 -type f -name '*.exe' | head -n1)
+              ;;
+            mac)
+              ARTIFACT=$(find out -maxdepth 1 -type f -name '*.dmg' | head -n1)
+              ;;
+            linux)
+              ARTIFACT=$(find out -maxdepth 1 -type f -name '*.AppImage' | head -n1)
+              ;;
+          esac
+          if [ -z "${ARTIFACT:-}" ] || [ ! -f "$ARTIFACT" ]; then
+            echo "::warning::no primary artifact found for ${{ matrix.platform }}; skipping manifest sign"
+            exit 0
+          fi
+          # Determine version from tag or workflow_dispatch input.
+          VERSION="${{ github.event.release.tag_name || inputs.version }}"
+          # Strip leading 'v' if present (manifest expects bare semver).
+          VERSION="${VERSION#v}"
+          node scripts/sign-release-manifest.mjs \
+            --build \
+            --out "out/manifest/manifest-${{ matrix.platform }}.json" \
+            --artifact "$ARTIFACT" \
+            --version "$VERSION"
+
+      # ─── AC-T-L7-04-4: failure-mode local artifact preservation ───────
+      #
+      # Always upload to the workflow run (not just to a GitHub Release).
+      # If `gh release upload` fails (rate limit, transient outage), the
+      # artifacts persist on the workflow-run page for manual download
+      # and re-upload.
+      - name: Upload installer artifacts (workflow-run scope)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-ui-${{ matrix.platform }}
+          path: |
+            out/**/*.exe
+            out/**/*.dmg
+            out/**/*.AppImage
+            out/**/*.deb
+            out/**/*.zip
+            out/**/*.sha256
+            out/**/*.yml
+            out/**/*.blockmap
+            out/manifest/**
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ─── AC-T-L7-04-1: publish to the GitHub Release on tag ───────────
+      - name: Upload to GitHub Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          # Upload all platform-relevant artifacts + their .sha256
+          # companions + the signed manifest.
+          UPLOAD_LIST=()
+          for f in $(find out -maxdepth 2 -type f \( -name '*.exe' -o -name '*.exe.sha256' -o -name '*.dmg' -o -name '*.dmg.sha256' -o -name '*.AppImage' -o -name '*.AppImage.sha256' -o -name '*.deb' -o -name '*.deb.sha256' -o -name '*.yml' -o -name '*.blockmap' \)); do
+            UPLOAD_LIST+=("$f")
+          done
+          for f in $(find out/manifest -maxdepth 1 -type f -name '*.json' 2>/dev/null || true); do
+            UPLOAD_LIST+=("$f")
+          done
+          if [ ${#UPLOAD_LIST[@]} -eq 0 ]; then
+            echo "::warning::no artifacts to upload"
+            exit 0
+          fi
+          gh release upload "$TAG" "${UPLOAD_LIST[@]}" --clobber

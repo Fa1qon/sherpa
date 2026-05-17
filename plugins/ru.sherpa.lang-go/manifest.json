@@ -1,0 +1,13 @@
+{
+  "$schema": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "id": "ru.sherpa.lang-go",
+  "version": "1.0.0",
+  "description": "Go language pack — STUB (DEVIATION: @codemirror/lang-go not bundled in MVP-1; deferred until package available; entry returns empty CodeMirror Extension).",
+  "capabilities": [
+    { "kind": "language", "label": "Go (stub)" }
+  ],
+  "entry": "./index.mjs",
+  "min_sherpa_version": "0.1.0",
+  "author": "Sherpa Team",
+  "license": "MIT"
+}

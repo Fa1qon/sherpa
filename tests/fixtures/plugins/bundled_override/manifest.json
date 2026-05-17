@@ -1,0 +1,11 @@
+{
+  "$schema": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "id": "ru.sherpa.lang-typescript",
+  "version": "9.9.9",
+  "description": "AC-T-L5-09-5: workspace plugin colliding with bundled ru.sherpa.lang-typescript via language capability (security-critical). B4-SEC applies — load() must reject with security_critical_override_blocked.",
+  "capabilities": ["language"],
+  "entry": "./index.js",
+  "min_sherpa_version": "0.1.0",
+  "author": "F9 test fixture",
+  "license": "MIT"
+}

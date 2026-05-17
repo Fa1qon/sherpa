@@ -1,0 +1,44 @@
+.settings {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: 100%;
+}
+
+.sidebar {
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border-default);
+  padding: 24px 12px;
+}
+
+.title {
+  font-size: 18px;
+  margin-bottom: 16px;
+  padding: 0 8px;
+}
+
+.navItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--fg-default);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.navItem:hover { background: var(--bg-hover); }
+.navItem[data-active="true"] { background: var(--bg-pressed); font-weight: 500; }
+
+.body {
+  padding: 32px;
+  overflow-y: auto;
+}
+
+.body button[data-active="true"] {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}

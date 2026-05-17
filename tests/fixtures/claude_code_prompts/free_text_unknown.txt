@@ -1,0 +1,2 @@
+[?9001h[?1004h[?25l[2J[m[H]0;claude[?25hI'd pick deep teal — it sits at the calm intersection of blue's focus and green's restfulness, which suits long stretches of code reading. It's also rare enough in default UI palettes that it feels deliberate rather than generic.
+[>4m[<u[?2031l[?2004l]9;4;0;]0;

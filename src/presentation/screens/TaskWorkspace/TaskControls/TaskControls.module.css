@@ -1,0 +1,38 @@
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.buttons {
+  display: flex;
+  gap: 6px;
+}
+.btn {
+  padding: 4px 12px;
+  background: var(--bg-app);
+  color: var(--fg-default);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn:hover { background: var(--bg-hover); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.tokens {
+  margin-left: auto;
+  color: var(--fg-muted);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+}
+.error {
+  color: var(--error, #c33);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

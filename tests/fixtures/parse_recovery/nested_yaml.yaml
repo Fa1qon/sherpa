@@ -1,0 +1,8 @@
+parent:
+  child:
+    grandchild: ok
+    list:
+      - one
+      - two
+      - three
+  sibling: 42

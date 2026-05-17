@@ -1,0 +1,25 @@
+node_modules/
+dist/
+dist-electron/
+out/
+.staging/
+coverage/
+.vite/
+.DS_Store
+.env
+.env.local
+.env.*.local
+*.log
+
+# Playwright test artifacts
+.playwright-cache/
+playwright-report/
+test-results/
+
+# Sherpa runtime data (created on first launch)
+.sherpa/
+
+# Bundled embedding model (large binary — regenerate via npm run model:download)
+resources/models/**/*.onnx
+resources/models/**/*.json
+!resources/models/**/.gitkeep

@@ -1,0 +1,16 @@
+.panel {
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-default);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-faint, var(--fg-muted));
+  font-size: 11px;
+}

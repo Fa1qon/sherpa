@@ -1,0 +1,234 @@
+# electron-builder configuration for Sherpa UI Client.
+# T-L7-01 (electron-builder finalization). See:
+#   - ADR-006 §Sub-decision: bundled CLI in <install>/bin/sherpa[.exe]
+#   - ADR-009 §Bundled MVP-1 plugins (T-L2-Plugins-Bundle)
+#   - phase-7-release.md §T-L7-01 acceptance criteria
+
+appId: com.sherpa.ui-client
+productName: Sherpa
+copyright: Copyright (c) 2026 Sherpa Team
+
+# directories.output deviates from T-L7-01 spec (which read "output: dist").
+# `dist/` is already the Vite renderer output (vite.config.ts: build.outDir).
+# Keeping electron-builder's installer artifacts in `out/` avoids the collision.
+directories:
+  output: out
+  buildResources: build
+
+# Per AC-T-L7-01-3 (size <=200MB / NF7): aggressive compression + tight `files`
+# exclude globs keep the asar payload small. The actual size assertion runs in
+# T-L7-04 release workflow on the produced installer artifacts.
+compression: maximum
+
+# Restrict Chromium locales to the two the UI ships translations for (NF19:
+# en + ru). Cuts ~40 MB from the unpacked image — Electron otherwise drops
+# ~55 .pak files for every Chromium-supported locale.
+electronLanguages:
+  - en-US
+  - ru
+
+# npmRebuild: false — skip electron-builder's built-in @electron/rebuild pass.
+# node-pty ships prebuilt win32-x64 binaries and its source build requires
+# winpty's GetCommitHash.bat (absent on standard Windows CI).
+# Better-sqlite3 must be rebuilt for Electron before packaging via:
+#   npm run rebuild
+# (uses prebuild-install targeting Electron 41.3.0 / NMV 145)
+# sqlite-vec is a pure-JS loader; the .dll is platform-specific but not
+# a Node.js native addon — no rebuild needed.
+npmRebuild: false
+
+files:
+  - dist-electron/**/*
+  - dist/**/*
+  - package.json
+  - "!**/*.map"
+  - "!**/*.ts"
+  - "!**/*.tsx"
+  - "!**/__tests__/**"
+  - "!**/*.spec.*"
+  - "!**/*.test.*"
+  - "!**/node_modules/.cache/**"
+  - "!**/node_modules/**/test/**"
+  - "!**/node_modules/**/tests/**"
+  - "!**/node_modules/**/example/**"
+  - "!**/node_modules/**/examples/**"
+  - "!**/node_modules/**/docs/**"
+  - "!**/node_modules/**/.bin/**"
+  - "!**/node_modules/**/*.md"
+  - "!**/node_modules/**/CHANGELOG*"
+  - "!**/node_modules/**/HISTORY*"
+  - "!**/node_modules/**/LICENSE*"
+  - "!**/node_modules/**/license*"
+  # We only ship win32-x64 / darwin-x64 / linux-x64 today. Strip the
+  # cross-architecture prebuilds shipped by node-pty (win32-arm64 +
+  # darwin-arm64 + the corresponding ConPty payloads). The platform-specific
+  # installer build re-includes the ones it needs through the `--win`/`--mac`/
+  # `--linux` selector.
+  - "!**/node_modules/node-pty/prebuilds/win32-arm64/**"
+  - "!**/node_modules/node-pty/prebuilds/darwin-arm64/**"
+  - "!**/node_modules/node-pty/prebuilds/darwin-x64/**"
+  - "!**/node_modules/node-pty/third_party/conpty/*/win10-arm64/**"
+  # Strip C++ source / build scripts that ship in node-pty's tarball but
+  # are unused by the prebuilt binary.
+  - "!**/node_modules/node-pty/src/**"
+  - "!**/node_modules/node-pty/deps/**"
+  - "!**/node_modules/node-pty/scripts/**"
+  - "!**/node_modules/better-sqlite3/src/**"
+  - "!**/node_modules/better-sqlite3/deps/**"
+  - "!**/node_modules/better-sqlite3/docs/**"
+
+# Native module unpack (better-sqlite3, node-pty, sqlite-vec) — Electron cannot
+# load native .node from inside the asar archive.
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+  - "**/node_modules/node-pty/**"
+  - "**/node_modules/sqlite-vec/**"
+  - "**/node_modules/onnxruntime-node/**"
+  - "**/node_modules/@huggingface/transformers/**"
+  - "**/*.node"
+
+# extraResources lands files in `<install>/resources/` (Electron convention).
+# Keys to AC-T-L7-01-2 (bundled CLI) + AC-T-L7-01-4 (plugins/ + agents/).
+#
+# - bin/  — Sherpa CLI binaries (sherpa, sherpa.exe). Per ADR-006 §Sub-decision
+#           bundled with the UI installer; `SherpaCliPort` resolves
+#           <install>/resources/bin/sherpa[.exe] in production. The provenance
+#           file (sherpa.provenance.json) ships alongside per ADR-006 SHA256
+#           transparency requirement.
+#
+# - plugins/ — 9 ru.sherpa.lang-* directories per ADR-009 §Bundled MVP-1 plugins.
+#              The bundled discovery tier reads from <install>/resources/plugins/.
+#
+# - agents/  — Sherpa-shipped subagent .md files (T-L7-05 populates with the 4
+#              gate/architecture/behavioral/case reviewers). Currently a
+#              .gitkeep-only placeholder so the path is valid for installer
+#              extraction; T-L7-05 drops the actual reviewer prompts here.
+extraResources:
+  - from: bin
+    to: bin
+    filter:
+      - "**/*"
+  - from: plugins
+    to: plugins
+    filter:
+      - "**/*"
+  - from: agents
+    to: agents
+    filter:
+      - "**/*"
+  - from: resources/models
+    to: models
+    filter:
+      - "**/*"
+
+# ----- Windows (NSIS) -----
+# AC-T-L7-01-1 (Windows NSIS).
+# Code signing options (signtoolOptions.certificateFile + certificatePassword)
+# are populated in T-L7-02 from GitHub Actions secrets (CSC_LINK / CSC_KEY_PASSWORD).
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icons/icon.ico
+  artifactName: "${productName}-${version}-${os}-${arch}.${ext}"
+  # publisherName removed — not valid under win: in electron-builder 26.x.
+  # Authenticode signtoolOptions wired in T-L7-04 once cert is provisioned.
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Sherpa
+  uninstallDisplayName: "Sherpa ${version}"
+  include: build/installer-scripts/nsis-windows.nsh
+
+# ----- macOS (DMG) -----
+# AC-T-L7-01-1 (macOS DMG).
+# Notarization (notarytool) wired in T-L7-02 once the Apple Developer ID is
+# provisioned. Hardened-runtime + entitlements file path are pre-declared so
+# the build does not need a config edit to flip notarization on.
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: build/icons/icon.icns
+  category: public.app-category.developer-tools
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/installer-scripts/entitlements.mac.plist
+  entitlementsInherit: build/installer-scripts/entitlements.mac.plist
+  artifactName: "${productName}-${version}-${os}-${arch}.${ext}"
+
+dmg:
+  title: "${productName} ${version}"
+  icon: build/icons/icon.icns
+  iconSize: 80
+  contents:
+    - x: 140
+      y: 200
+      type: file
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+
+# ----- Linux (AppImage + .deb) -----
+# AC-T-L7-01-1 (Linux AppImage + .deb).
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  icon: build/icons
+  category: Development
+  synopsis: Local-first, methodology-driven workspace UI for Sherpa
+  description: |
+    Sherpa UI Client is a local-first Electron application that provides a
+    methodology-driven workspace on top of the Sherpa CLI. The installer
+    ships a bundled `sherpa` CLI binary per ADR-006 (sub-decision: bundled
+    CLI). All project data remains under the user's HOME directory; no
+    cloud telemetry.
+  artifactName: "${productName}-${version}-${os}-${arch}.${ext}"
+  desktop:
+    entry:
+      Name: Sherpa
+      GenericName: Methodology-driven workspace
+      Comment: Local-first, methodology-driven workspace for Sherpa
+      Keywords: sherpa;methodology;workspace;developer;
+      StartupWMClass: sherpa-ui-client
+
+deb:
+  priority: optional
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libdrm2
+    - libgbm1
+    - libxcb-dri3-0
+
+# Auto-update publish channel (T-L2-I, ADR-006 §C-split, ADR-007).
+# Owner / repo are template placeholders — the release pipeline (T-L7-04)
+# replaces them with the production values via electron-builder env vars
+# (GH_TOKEN + GH_OWNER + GH_REPO). releaseType=release excludes drafts and
+# prereleases per ADR-006 §B3-SEC dual-channel trust requirement.
+publish:
+  - provider: github
+    owner: sherpa-org-placeholder
+    repo: sherpa-ui
+    releaseType: release
+    channel: stable

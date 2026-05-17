@@ -1,0 +1,19 @@
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-xs);
+  color: var(--fg-muted);
+  height: 100%;
+  cursor: default;
+  user-select: none;
+}
+.item:hover { color: var(--fg-default); background: var(--bg-hover); }
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }

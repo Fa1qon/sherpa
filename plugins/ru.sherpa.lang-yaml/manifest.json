@@ -1,0 +1,13 @@
+{
+  "$schema": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "id": "ru.sherpa.lang-yaml",
+  "version": "1.0.0",
+  "description": "YAML language pack — syntax highlighting via @codemirror/lang-yaml.",
+  "capabilities": [
+    { "kind": "language", "label": "YAML" }
+  ],
+  "entry": "./index.mjs",
+  "min_sherpa_version": "0.1.0",
+  "author": "Sherpa Team",
+  "license": "MIT"
+}

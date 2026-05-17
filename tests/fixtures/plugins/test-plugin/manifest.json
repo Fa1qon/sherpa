@@ -1,0 +1,11 @@
+{
+  "$schema": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "id": "com.example.test-workspace-plugin",
+  "version": "1.0.0",
+  "description": "Test workspace plugin — F9 integration fixture (AC-T-L5-09-1/2/3)",
+  "capabilities": ["hook"],
+  "entry": "./index.js",
+  "min_sherpa_version": "0.1.0",
+  "author": "F9 test fixture",
+  "license": "MIT"
+}

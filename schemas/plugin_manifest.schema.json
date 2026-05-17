@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sherpa-project.org/schemas/plugin_manifest.v1.json",
+  "title": "Sherpa plugin manifest",
+  "description": "Schema for `<plugin-id>/manifest.json` per data.md §4.9 + ADR-009 §Manifest format + ADR-009 §B1-SEC entry constraint. Validation enforces NF21 (manifest validation) and NF22 (path traversal protection — relative entry).",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "description",
+    "capabilities",
+    "entry",
+    "min_sherpa_version",
+    "author",
+    "license"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional pointer to this schema (informational)."
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique slug, e.g. `ru.sherpa.lang-typescript`. Lowercase letters, digits, hyphens, dots; must not contain path separators.",
+      "pattern": "^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$",
+      "minLength": 2,
+      "maxLength": 128
+    },
+    "version": {
+      "type": "string",
+      "description": "Semver string (M.m.p with optional pre-release).",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": [
+              "language",
+              "overlay",
+              "methodology",
+              "integration",
+              "theme",
+              "agent_adapter",
+              "hook"
+            ]
+          },
+          {
+            "type": "object",
+            "required": ["kind"],
+            "additionalProperties": true,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "language",
+                  "overlay",
+                  "methodology",
+                  "integration",
+                  "theme",
+                  "agent_adapter",
+                  "hook"
+                ]
+              },
+              "label": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "entry": {
+      "type": "string",
+      "description": "Relative path (./...) to the JS entry module. Per ADR-009 §B1-SEC, MUST match /^\\.\\/[^/].*\\.(?:js|cjs|mjs)$/ and MUST resolve within the plugin directory.",
+      "pattern": "^\\./[^/\\\\][^\\\\]*\\.(?:js|cjs|mjs)$",
+      "maxLength": 512
+    },
+    "min_sherpa_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX identifier; free-form non-empty string accepted, validators MAY tighten.",
+      "minLength": 1,
+      "maxLength": 128
+    }
+  }
+}

@@ -1,0 +1,5 @@
+key: value
+broken: [missing
+indented:
+  - one
+  -- two

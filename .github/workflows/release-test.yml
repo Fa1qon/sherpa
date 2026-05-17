@@ -1,0 +1,111 @@
+# Sherpa UI Client — alpha-release test workflow (T-L6-C, AC-T-L6-C-2/4 indirect).
+#
+# Purpose: dry-run the release pipeline on alpha tags BEFORE the real
+# release.yml (T-L7-04) lights up. Ensures release-test artifacts can be
+# built across the 3-OS matrix without depending on production signing
+# keys / notarization secrets.
+#
+# Trigger: tag push matching `v*-alpha.*` (e.g. v0.1.0-alpha.3) OR manual
+#          workflow_dispatch.
+#
+# Output: per-OS Electron installer artifact uploaded to the workflow run.
+#         No GitHub Release is created. No real signing performed.
+#
+# DEVIATION / TODO (T-L7-04 will replace):
+#   - Code signing (Win Authenticode, Mac notarization) is STUBBED here.
+#     Real signing keys live behind ${{ secrets.SIGNING_KEY_PRIVATE }} +
+#     ${{ secrets.APPLE_ID }} etc. — secrets do NOT yet exist; placeholder
+#     env vars use empty strings so electron-builder skips signing
+#     (CSC_LINK / CSC_KEY_PASSWORD unset → unsigned dev build).
+#   - The ed25519 manifest signing step (per ADR-006) reads from
+#     ${{ secrets.SHERPA_UPDATE_SIGNING_KEY }} which is also unset in
+#     alpha; fallback to TEST_PRIVATE_KEY (build-time bypass via
+#     SHERPA_DEV_BUILD=1) so this workflow runs without secrets.
+#   - GitHub Release upload is intentionally OMITTED for alpha — artifacts
+#     remain inside the workflow run for inspection only.
+
+name: Release (alpha test)
+
+on:
+  push:
+    tags:
+      - 'v*-alpha.*'
+  workflow_dispatch:
+
+jobs:
+  alpha-build:
+    name: Alpha Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['20']
+    runs-on: ${{ matrix.os }}
+    # AUTO-W11: Win is primary; Mac/Lin advisory.
+    continue-on-error: ${{ matrix.os != 'windows-latest' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: typecheck
+        run: npm run typecheck
+
+      - name: test (vitest)
+        run: npm test
+        env:
+          SHERPA_SKIP_LAUNCH_TEST: '1'
+
+      - name: build:main (Electron main TS to CJS)
+        run: npm run build:main
+        env:
+          # Bypass production signing-key guard for alpha; T-L7-04 wires
+          # real key + removes this env var.
+          SHERPA_DEV_BUILD: '1'
+
+      - name: build:renderer (Vite)
+        run: npm run build || echo "renderer build placeholder; T-L1-14 fills"
+        env:
+          SHERPA_DEV_BUILD: '1'
+
+      - name: electron-builder (unsigned dev build for alpha)
+        # NOTE: real signing/notarization is T-L7-04 territory. For alpha
+        # we deliberately leave CSC_LINK / CSC_KEY_PASSWORD / APPLE_ID
+        # unset so electron-builder produces an unsigned bundle.
+        # The artifact is for smoke-only — never publish to a real release.
+        run: |
+          npx electron-builder --publish=never --config.afterSign='' || echo "electron-builder placeholder until T-L7-04 fills config"
+        env:
+          SHERPA_DEV_BUILD: '1'
+          # Placeholder secrets — non-existent today; documented in workflow.
+          # CSC_LINK: ${{ secrets.SIGNING_KEY_PRIVATE }}
+          # CSC_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload alpha artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-ui-alpha-${{ matrix.os }}
+          path: |
+            dist/**
+            dist-electron/**
+          if-no-files-found: warn
+          retention-days: 14

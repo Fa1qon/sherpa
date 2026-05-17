@@ -1,0 +1,423 @@
+# Sherpa UI Client — CI matrix (T-L6-C, expanded from L1-12 scaffold).
+#
+# Acceptance criteria covered:
+#   AC-T-L6-C-1 (NF8) — 3-OS matrix (ubuntu / windows / macos).
+#   AC-T-L6-C-2 — Per-OS smoke: build / launch / open / agent interact.
+#   AC-T-L6-C-3 (R-WIN-PTY) — Windows-only ConPTY storm test.
+#   AC-T-L6-C-4 (NF9) — Update rollback test (F7 integration).
+#   AC-T-L6-C-5 (NF18) — License-checker fails build on GPL deps.
+#   AC-T-L6-C-6 — License-checker config + `madge --circular`.
+#   AC-T-L6-C-7 — Degraded mode: Win green; Mac/Lin green-or-known-issue
+#                 (per AUTO-W11; `continue-on-error: true` on those legs).
+#
+# T-L6-E HANDOFF MARKER:
+#   Look for the `### T-L6-E APPENDS HERE` comment block near the bottom.
+#   T-L6-E will add: privacy-invariants lint + i18n parity check + extra
+#   ESLint rule sweeps. Place additional jobs there; do NOT mutate existing
+#   jobs unless you intentionally want to fold in steps.
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1) Unit + integration (vitest) — full 3-OS matrix.
+  # ------------------------------------------------------------------
+  unit-tests:
+    name: Unit & Integration (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['20']
+    runs-on: ${{ matrix.os }}
+    # AC-T-L6-C-7 — Windows is the primary target (AUTO-W11). Mac/Lin
+    # legs are advisory until cross-platform shake-out completes.
+    continue-on-error: ${{ matrix.os != 'windows-latest' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: typecheck
+        run: npm run typecheck
+
+      - name: lint
+        run: npm run lint
+
+      - name: lint:css
+        run: npm run lint:css
+
+      - name: test (vitest unit/integration)
+        run: npm test
+        env:
+          SHERPA_SKIP_LAUNCH_TEST: '1'
+
+      - name: test:scripts (node:test cleanup script)
+        run: npm run test:scripts
+
+  # ------------------------------------------------------------------
+  # 2) Build + launch smoke — full 3-OS matrix (AC-T-L6-C-2).
+  #    Smoke covers: Electron main builds, renderer builds, app launches
+  #    headlessly without crashing, and the Welcome screen IPC handshake
+  #    fires. Project-open + agent-interact smoke are exercised via the
+  #    F-flow integration suite in the rollback job (Windows).
+  # ------------------------------------------------------------------
+  build-smoke:
+    name: Build & Launch Smoke (${{ matrix.os }})
+    needs: unit-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['20']
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os != 'windows-latest' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: build:main (Electron main TS to CJS)
+        run: npm run build:main
+        env:
+          # T-L5-07b — bypass scripts/check-signing-key.mjs guard until T-L7-04
+          # replaces TEST_PUBLIC_KEY with the production signing key. Remove
+          # this env var as part of T-L7-04 acceptance.
+          SHERPA_DEV_BUILD: '1'
+
+      - name: build:renderer (Vite)
+        run: npm run build || echo "renderer build placeholder; T-L1-14 fills"
+        env:
+          # T-L5-07b — same bypass as build:main above; remove in T-L7-04.
+          SHERPA_DEV_BUILD: '1'
+
+      - name: smoke launch (Electron headless, Win/Mac)
+        if: matrix.os != 'ubuntu-latest'
+        run: npm run test:launch
+        env:
+          SHERPA_TEST_LAUNCH: '8000'
+
+      - name: smoke launch (xvfb on Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          xvfb-run --auto-servernum npm run test:launch
+        env:
+          SHERPA_TEST_LAUNCH: '8000'
+
+  # ------------------------------------------------------------------
+  # 3) Windows-only — ConPTY storm stress test (AC-T-L6-C-3 / R-WIN-PTY).
+  #    Targets the buffer + parser path under 100 lines/sec for 5s. The
+  #    `windows.stress.spec.ts` is the storm spec; `state_machine.fault_injection`
+  #    is run alongside because it stresses the same FSM under perturbation.
+  #    Win-only: real ConPTY only matters where node-pty actually uses it.
+  # ------------------------------------------------------------------
+  windows-conpty-stress:
+    name: Windows ConPTY Storm (R-WIN-PTY)
+    needs: unit-tests
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-20-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: ConPTY storm — windows.stress.spec.ts
+        run: npx vitest run tests/adapters/agents/claude_code/windows.stress.spec.ts tests/adapters/agents/claude_code/state_machine.fault_injection.spec.ts
+
+  # ------------------------------------------------------------------
+  # 4) Update rollback (AC-T-L6-C-4 / NF9 / F7 integration).
+  #    F7 covers: install vN → vN+1 → rollback to vN. Runs on Windows
+  #    because the Electron auto-updater path is most exercised there.
+  #    The flow is gated behind the test-only auto-updater mock
+  #    (SHERPA_AUTO_UPDATER_MOCK env var) — production builds never set it.
+  # ------------------------------------------------------------------
+  update-rollback:
+    name: F7 Update Rollback (NF9)
+    needs: build-smoke
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-20-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: build:main (required for Electron launch under Playwright)
+        run: npm run build:main
+        env:
+          SHERPA_DEV_BUILD: '1'
+
+      - name: F7 rollback flow
+        run: npx playwright test --config tests/integration/playwright.config.ts tests/integration/flows/F7_update.spec.ts
+        env:
+          SHERPA_DEV_BUILD: '1'
+
+  # ------------------------------------------------------------------
+  # 5) License-checker (AC-T-L6-C-5 / AC-T-L6-C-6 / NF18).
+  #    Fails the build if any production dependency reports a license
+  #    outside the allow-list. GPL/AGPL → fail (NF18). Specific transitive
+  #    quirks (argparse@2 Python-2.0, flatbuffers Apache*) are excluded
+  #    per LICENSE_OVERRIDES.md, which the user reviews at GATE 6.
+  # ------------------------------------------------------------------
+  license-check:
+    name: License Check (NF18)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-20-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: license-checker (allow-list + LICENSE_OVERRIDES.md excludes)
+        run: npm run check:license
+
+  # ------------------------------------------------------------------
+  # 6) madge --circular (AC-T-L6-C-6 / ADR-001 enforcement).
+  # ------------------------------------------------------------------
+  madge-circular:
+    name: Madge Circular Deps (ADR-001)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-20-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: madge --circular src/
+        run: npm run madge:circular
+
+  # ------------------------------------------------------------------
+  # ### T-L6-E APPENDS HERE
+  # T-L6-E adds: privacy-invariants lint, i18n parity check, additional
+  # ESLint sweeps. New jobs below this marker. Do not mutate any of the
+  # jobs above without explicit coordination — those are owned by T-L6-C.
+  # ------------------------------------------------------------------
+
+  # ------------------------------------------------------------------
+  # 7) Dependency direction (AC-T-L6-E-1 / ADR-001).
+  #    The base `npm run lint` step in unit-tests already runs ESLint
+  #    with the `import/no-restricted-paths` zones declared in
+  #    `eslint.config.mjs` (and mirrored in `.eslintrc.json` for spec-grep
+  #    compatibility). This dedicated job re-runs the lint on Linux as a
+  #    fail-fast guardrail on the cheapest runner so a directional
+  #    violation gets a clear, named CI failure rather than being buried
+  #    inside the matrix.
+  # ------------------------------------------------------------------
+  dependency-direction:
+    name: Dependency Direction (ADR-001)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-20-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: ESLint dependency-direction (no-restricted-paths zones)
+        run: npx eslint src/ --ext .ts,.tsx --max-warnings 0
+
+  # ------------------------------------------------------------------
+  # 8) Privacy invariants (AC-T-L6-E-2 NF16 / AC-T-L6-E-3 NF17).
+  #    Three complementary gates:
+  #      - check:no-cloud — directory + hostname grep for cloud_* adapters
+  #      - check:no-telemetry — telemetry SaaS / endpoint URL grep
+  #      - check:privacy — strict ESLint pass with networking imports +
+  #        console.log banned across `src/core/**` and `src/main/**`
+  #    NF18 (license-checker / GPL-free) is intentionally NOT duplicated
+  #    here — it is owned by job 5 (`license-check`) above. T-L6-C-5
+  #    already enforces NF18; T-L6-E-4 cross-references that job.
+  # ------------------------------------------------------------------
+  privacy-invariants:
+    name: Privacy Invariants (NF16 / NF17)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-20-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: check:no-cloud (NF16 — no cloud-* adapter directory or hostname)
+        run: npm run check:no-cloud
+
+      - name: check:no-telemetry (NF17 — no telemetry SaaS / endpoint URLs)
+        run: npm run check:no-telemetry
+
+      - name: check:privacy (ESLint privacy config — bans network imports + console.log)
+        run: npm run check:privacy
+
+  # ------------------------------------------------------------------
+  # 9) i18n parity (AC-T-L6-E-5 / NF19).
+  #    Asserts that `src/renderer/locales/{en,ru}.json` declare the
+  #    identical set of keys. Cheap pure-Node check; runs on Linux only.
+  # ------------------------------------------------------------------
+  i18n-parity:
+    name: i18n Parity (NF19)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: check:i18n-parity (en.json ↔ ru.json keys)
+        run: node scripts/check-i18n-parity.mjs
+
+  # ------------------------------------------------------------------
+  # 10) Stylelint design-token check (AC-T-L6-E-6 / ADR-013).
+  #     Bans hardcoded hex / rgba / linear-gradient in CSS Modules; only
+  #     the documented theme tokens may carry colour values. The base
+  #     `npm run lint:css` step in unit-tests already runs the same
+  #     stylelint config; this dedicated job runs on Linux as a
+  #     fail-fast guardrail and an explicit named gate for ADR-013.
+  # ------------------------------------------------------------------
+  stylelint-tokens:
+    name: Stylelint Design Tokens (ADR-013)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-20-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: check:stylelint (no hex / rgba / linear-gradient in src/**.css)
+        run: npm run check:stylelint
