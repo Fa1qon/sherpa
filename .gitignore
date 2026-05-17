@@ -1,23 +1,25 @@
 node_modules/
 dist/
+.staging/
+.sherpa-build/state.json.tmp.*
+*.log
+tests/visual/diffs/
+.playwright-cache/
+playwright-report/
+test-results/
 dist-electron/
 out/
-.staging/
+# build/ ships installer build resources (icons, installer-scripts) that MUST
+# be tracked. The legacy ignore was intended for a now-defunct ad-hoc /build
+# bundler output. Per T-L7-01: keep build/icons + build/installer-scripts
+# under version control; ignore only the transient subdirs that previously
+# landed there (none currently).
 coverage/
-.vite/
 .DS_Store
 .env
 .env.local
 .env.*.local
-*.log
-
-# Playwright test artifacts
-.playwright-cache/
-playwright-report/
-test-results/
-
-# Sherpa runtime data (created on first launch)
-.sherpa/
+.vite/
 
 # Bundled embedding model (large binary — regenerate via npm run model:download)
 resources/models/**/*.onnx
