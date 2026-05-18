@@ -6,11 +6,13 @@ import { Appearance } from './sections/Appearance';
 import { CostTracking } from './sections/CostTracking';
 import { Compliance } from './sections/Compliance';
 import { Advanced } from './sections/Advanced';
+import { Network } from './sections/Network';
 import { About } from './sections/About';
 import { ProjectConfig } from './sections/ProjectConfig';
+import { Agents } from './sections/Agents';
 import styles from './Settings.module.css';
 
-type SectionId = 'general' | 'appearance' | 'cost' | 'compliance' | 'advanced' | 'project' | 'about';
+type SectionId = 'general' | 'appearance' | 'cost' | 'compliance' | 'advanced' | 'network' | 'agents' | 'project' | 'about';
 
 interface Props {
   /** Optional initial section to show on mount. Defaults to 'general'. */
@@ -26,7 +28,7 @@ export function Settings({ initialSection = 'general' }: Props): ReactElement {
       <aside className={styles.sidebar}>
         <h2 className={styles.title}>{t('settings.title')}</h2>
         <nav>
-          {(['general', 'appearance', 'cost', 'compliance', 'advanced', 'project', 'about'] as const).map((id) => (
+          {(['general', 'appearance', 'cost', 'compliance', 'advanced', 'network', 'agents', 'project', 'about'] as const).map((id) => (
             <button
               key={id}
               className={styles.navItem}
@@ -44,6 +46,8 @@ export function Settings({ initialSection = 'general' }: Props): ReactElement {
         {section === 'cost' && <CostTracking />}
         {section === 'compliance' && <Compliance />}
         {section === 'advanced' && <Advanced />}
+        {section === 'network' && <Network />}
+        {section === 'agents' && <Agents />}
         {section === 'project' && <ProjectConfig />}
         {section === 'about' && <About />}
       </main>

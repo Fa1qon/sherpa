@@ -5,6 +5,8 @@
 
 import type { EffortLevel } from './task';
 import type { InvolvementPreset } from './involvement';
+import type { ProxyEntry, ProxyAssignments } from './proxy';
+import { isProxyEntry, isProxyAssignments } from './proxy';
 
 export type Theme = 'dark' | 'light' | 'auto';
 export type Language = 'en' | 'ru';
@@ -14,8 +16,29 @@ const PERMISSION_MODES: readonly PermissionMode[] = ['bypass', 'acceptEdits', 'a
 
 export type ComplianceOutputMode = 'off' | 'file' | 'clipboard' | 'both';
 
-const AGENT_CLIS = ['claude-code', 'codex', 'opencode'] as const;
+const AGENT_CLIS = [
+  'claude-code',
+  'codex',
+  'opencode',
+  'gemini',
+  'goose',
+  'amp',
+  'cursor',
+  'copilot',
+  'pi',
+  'qwen-code',
+  'kimi',
+  'aider',
+] as const;
 export type AgentCli = (typeof AGENT_CLIS)[number];
+
+export interface AgentCredential {
+  readonly type: 'apikey' | 'oauth';
+  readonly apiKey?: string;
+  readonly accessToken?: string;
+  readonly refreshToken?: string;
+  readonly expiresAt?: number;
+}
 
 export interface CostTrackingSettings {
   readonly showCost: boolean;
@@ -33,6 +56,12 @@ export interface UserSettings {
   readonly complianceOutputMode: ComplianceOutputMode;
   /** Show the Event log (journal) panel in TaskWorkspace. Default: false. */
   readonly showEventLog: boolean;
+  /** Named proxy configurations. Absent = no proxies defined. */
+  readonly proxyEntries?: readonly ProxyEntry[];
+  /** Per-target proxy assignment. Absent = all direct. */
+  readonly proxyAssignments?: ProxyAssignments;
+  /** Per-agent credentials (API keys or OAuth tokens). Absent = no credentials stored. */
+  readonly agentCredentials?: Readonly<Partial<Record<AgentCli, AgentCredential>>>;
 }
 
 export interface ProjectSettings {
@@ -93,6 +122,17 @@ export function defaultProjectSettings(): ProjectSettings {
   };
 }
 
+function isAgentCredential(v: unknown): v is AgentCredential {
+  if (typeof v !== 'object' || v === null) return false;
+  const c = v as Record<string, unknown>;
+  if (c.type !== 'apikey' && c.type !== 'oauth') return false;
+  if (c.apiKey !== undefined && typeof c.apiKey !== 'string') return false;
+  if (c.accessToken !== undefined && typeof c.accessToken !== 'string') return false;
+  if (c.refreshToken !== undefined && typeof c.refreshToken !== 'string') return false;
+  if (c.expiresAt !== undefined && typeof c.expiresAt !== 'number') return false;
+  return true;
+}
+
 /**
  * Structural shape guard. Verifies field presence + types only — does NOT
  * validate semantic correctness (e.g., that path strings resolve on disk).
@@ -123,7 +163,17 @@ export function isUserSettings(value: unknown): value is UserSettings {
     isCostTrackingSettings(v.costTracking) &&
     typeof v.complianceOutputMode === 'string' &&
     (COMPLIANCE_OUTPUT_MODES as readonly string[]).includes(v.complianceOutputMode) &&
-    typeof v.showEventLog === 'boolean'
+    typeof v.showEventLog === 'boolean' &&
+    (v.proxyEntries === undefined ||
+      (Array.isArray(v.proxyEntries) && v.proxyEntries.every(isProxyEntry))) &&
+    (v.proxyAssignments === undefined || isProxyAssignments(v.proxyAssignments)) &&
+    (v.agentCredentials === undefined ||
+      (typeof v.agentCredentials === 'object' &&
+        v.agentCredentials !== null &&
+        Object.entries(v.agentCredentials as Record<string, unknown>).every(
+          ([k, val]) =>
+            (AGENT_CLIS as readonly string[]).includes(k) && isAgentCredential(val),
+        )))
   );
 }
 

@@ -129,7 +129,7 @@ function buildContainer(opts: {
     get: vi.fn(),
   } as never);
   c.register(PORT.settings, {
-    getUserSettings: vi.fn(),
+    getUserSettings: vi.fn().mockResolvedValue({ theme: 'dark', language: 'en', defaultAgentCli: 'claude', costTracking: { enabled: false }, complianceOutputMode: 'off', showEventLog: false }),
     setUserSettings: vi.fn(),
     getProjectSettings: vi.fn(),
     setProjectSettings: vi.fn(),

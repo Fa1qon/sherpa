@@ -14,6 +14,8 @@ import path from 'node:path';
 import { buildContainer } from './composition_root';
 import { registerIpcHandlers } from './ipc';
 import { setupIpcEventBridge } from './events/ipc_event_bridge';
+import { registerUserBrowserHandlers } from './ipc/user_browser_handlers';
+import { userBrowser } from './services/user_browser';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -82,6 +84,7 @@ if (!gotTheLock) {
     // shown so the renderer can invoke channels from its very first tick.
     registerIpcHandlers(container);
     setupIpcEventBridge();
+    registerUserBrowserHandlers();
 
     // Dev-tools shortcut — available in all builds for diagnostics.
     ipcMain.on('app:open-devtools', (event) => {
@@ -102,6 +105,8 @@ if (!gotTheLock) {
       setTimeout(() => app.quit(), ms);
     }
   });
+
+  app.on('before-quit', () => { userBrowser.close(); });
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();

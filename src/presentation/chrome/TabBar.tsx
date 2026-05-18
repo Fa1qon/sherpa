@@ -18,6 +18,7 @@ const TITLE_KEY: Record<TabKind, string> = {
   'methodology-editor': 'tabs.methodologyEditor',
   file: 'tabs.file',
   tracker: 'tabs.tracker',
+  browser: 'activityBar.browser',
 };
 
 export interface TabBarProps {

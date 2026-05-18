@@ -1,7 +1,8 @@
 // src/renderer/store/settings.ts
 import { create } from 'zustand';
-import type { UserSettings, ProjectSettings, Theme, Language, CostTrackingSettings, ComplianceOutputMode } from '../../core/domain/settings';
+import type { UserSettings, ProjectSettings, Theme, Language, CostTrackingSettings, ComplianceOutputMode, AgentCli } from '../../core/domain/settings';
 import { defaultUserSettings } from '../../core/domain/settings';
+import type { ProxyEntry, ProxyAssignments } from '../../core/domain/proxy';
 import { ipcClient } from '../ipc/client';
 
 export interface SettingsState {
@@ -17,6 +18,9 @@ export interface SettingsState {
   setCostTracking(c: CostTrackingSettings): Promise<void>;
   setComplianceOutputMode(mode: ComplianceOutputMode): Promise<void>;
   setShowEventLog(show: boolean): Promise<void>;
+  updateProxyEntries(entries: ProxyEntry[]): Promise<void>;
+  updateProxyAssignments(assignments: ProxyAssignments): Promise<void>;
+  setAgentCredential(agentId: AgentCli, apiKey: string): Promise<void>;
 }
 
 export const useSettings = create<SettingsState>((set, get) => ({
@@ -75,5 +79,23 @@ export const useSettings = create<SettingsState>((set, get) => ({
   saveProject: async (projectPath, s) => {
     await ipcClient.settings().setProject(projectPath, s);
     set({ projectSettings: s });
+  },
+
+  updateProxyEntries: async (entries) => {
+    const next = { ...get().user, proxyEntries: entries };
+    set({ user: next });
+    await ipcClient.settings().setUser(next);
+  },
+
+  updateProxyAssignments: async (assignments) => {
+    const next = { ...get().user, proxyAssignments: assignments };
+    set({ user: next });
+    await ipcClient.settings().setUser(next);
+  },
+
+  setAgentCredential: async (agentId, apiKey) => {
+    await window.sherpa.agent.storeKey(agentId, apiKey);
+    const user = await ipcClient.settings().getUser();
+    set({ user });
   },
 }));

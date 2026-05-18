@@ -1,6 +1,6 @@
 {
   "name": "sherpa-ui-client",
-  "version": "0.21.12",
+  "version": "0.22.0",
   "description": "Local-first, methodology-driven workspace UI for the Sherpa CLI",
   "author": "Sherpa Team",
   "private": true,

@@ -105,6 +105,12 @@ export const CH = {
   // E2E debug channel — exposes backend errors to tests (only when SHERPA_DEBUG_E2E=1)
   DEBUG_GET_ERRORS: 'debug:get-errors',
 
+  // Agent domain (Plan 03)
+  AGENT_STORE_KEY: 'agent.storeKey',
+  AGENT_AUTH_REVOKE: 'agent.authRevoke',
+  AGENT_AUTH_STATUS: 'agent.authStatus',
+  AGENT_HEALTH: 'agent.health',
+
   // Plans 2-5 add: methodology.*, task.*, agent.*, tool.*, cases.*, ...
 } as const;
 

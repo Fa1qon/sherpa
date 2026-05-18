@@ -40,6 +40,15 @@ import { eventBus } from '../events/event_bus';
 import { SessionStore } from '../services/session_store';
 import type { SessionData } from '../services/session_store';
 import { initDebugErrorCapture, registerDebugHandlers } from './debug_handlers';
+import {
+  compressThread,
+  formatForSystemPrompt,
+  isContextTooLongError,
+  CONTEXT_RESTORED_NOTICE,
+} from '../services/context_compressor';
+import { proxyManager } from '../services/proxy_manager';
+import { userBrowser } from '../services/user_browser';
+import { DEFAULT_PROXY_ASSIGNMENTS } from '../../core/domain/proxy';
 
 /** Optional low-level overrides for testability. */
 export interface IpcHandlerDeps {
@@ -48,21 +57,78 @@ export interface IpcHandlerDeps {
 }
 
 /**
- * Per-task Claude Code session ID for free-chat turns.
- * Keyed by task ID; value is the `session_id` returned by Claude Code in
- * the `result` event. Passed as `--resume <id>` on the next turn so the
- * agent retains conversation history across multiple user messages.
- * Module-scoped (process lifetime) — cleared implicitly on app restart.
+ * Per-task Claude Code session ID for free-chat turns (in-memory cache).
+ * Keyed by task ID. Persisted to disk so restarts can resume.
  */
 const freeChatSessionIds = new Map<string, string>();
 
 /**
- * Tracks the last Claude Code session ID returned for methodology tasks,
- * keyed by taskId. Passed as `resumeSessionId` on the next turn so the
- * agent sees its prior conversation history within the same stage.
- * Reset when stage advances (different stages start fresh sessions).
+ * Per-task Claude Code session ID for methodology turns (in-memory cache).
+ * Keyed by taskId. Persisted to disk with stageId so stage advances
+ * automatically invalidate the stored session.
  */
 const methodologySessionIds = new Map<string, string>();
+
+// ---------------------------------------------------------------------------
+// Session-ID persistence helpers
+// ---------------------------------------------------------------------------
+
+async function readFreeChatSessionId(
+  projectPath: string,
+  taskId: string,
+): Promise<string | undefined> {
+  try {
+    const file = path.join(projectPath, '.sherpa', 'tasks', taskId, 'cc_free_session.txt');
+    return (await fsp.readFile(file, 'utf8')).trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function writeFreeChatSessionId(
+  projectPath: string,
+  taskId: string,
+  sessionId: string,
+): Promise<void> {
+  try {
+    const dir = path.join(projectPath, '.sherpa', 'tasks', taskId);
+    await fsp.mkdir(dir, { recursive: true });
+    await fsp.writeFile(path.join(dir, 'cc_free_session.txt'), sessionId, 'utf8');
+  } catch { /* best-effort */ }
+}
+
+/** Returns the persisted session ID only if it matches the current stageId. */
+async function readMethodologySessionId(
+  projectPath: string,
+  taskId: string,
+  stageId: string | undefined,
+): Promise<string | undefined> {
+  if (!stageId) return undefined;
+  try {
+    const file = path.join(projectPath, '.sherpa', 'tasks', taskId, 'cc_session.json');
+    const raw = await fsp.readFile(file, 'utf8');
+    const parsed = JSON.parse(raw) as { stageId?: string; sessionId?: string };
+    if (parsed.stageId === stageId && parsed.sessionId) return parsed.sessionId;
+  } catch { /* file missing or malformed */ }
+  return undefined;
+}
+
+async function writeMethodologySessionId(
+  projectPath: string,
+  taskId: string,
+  stageId: string,
+  sessionId: string,
+): Promise<void> {
+  try {
+    const dir = path.join(projectPath, '.sherpa', 'tasks', taskId);
+    await fsp.mkdir(dir, { recursive: true });
+    await fsp.writeFile(
+      path.join(dir, 'cc_session.json'),
+      JSON.stringify({ stageId, sessionId }),
+      'utf8',
+    );
+  } catch { /* best-effort */ }
+}
 
 /** Module-level MCP server — started lazily on first methodology turn. */
 const sherpaMcpServer = new SherpaMcpServer();
@@ -118,6 +184,16 @@ export function registerIpcHandlers(
 
   const project = container.resolve(PORT.project);
   const settings = container.resolve(PORT.settings);
+
+  // Initialize ProxyManager from persisted settings on startup.
+  void settings.getUserSettings()
+    .then((s) => {
+      proxyManager.update(
+        s.proxyEntries ?? [],
+        s.proxyAssignments ?? DEFAULT_PROXY_ASSIGNMENTS,
+      );
+    })
+    .catch((err: unknown) => console.warn('[proxy] startup init failed:', err));
 
   // Wire BrowserService into the module-level MCP server so per-turn
   // browser tools can look up sessions by taskId.
@@ -203,9 +279,15 @@ export function registerIpcHandlers(
   // --- settings.* --------------------------------------------------------
   ipcMain.handle(CH.SETTINGS_GET_USER, () => settings.getUserSettings());
 
-  ipcMain.handle(CH.SETTINGS_SET_USER, (_event, s: UserSettings) =>
-    settings.setUserSettings(s),
-  );
+  ipcMain.handle(CH.SETTINGS_SET_USER, async (_event, s: UserSettings) => {
+    await settings.setUserSettings(s);
+    // Push proxy changes live.
+    proxyManager.update(
+      s.proxyEntries ?? [],
+      s.proxyAssignments ?? DEFAULT_PROXY_ASSIGNMENTS,
+    );
+    await userBrowser.applyProxy();
+  });
 
   ipcMain.handle(CH.SETTINGS_GET_PROJECT, (_event, projectPath: string) =>
     settings.getProjectSettings(projectPath),
@@ -324,6 +406,7 @@ export function registerIpcHandlers(
         projectPath?: string;
         autoStart?: boolean;
         compliance_review_enabled?: boolean;
+        strictness_mode?: import('../../core/domain/task').StrictnessMode;
       },
     ) => {
       // Lazy-inject ProjectDatabase into TaskService when projectPath is known.
@@ -449,7 +532,11 @@ export function registerIpcHandlers(
       if (isFreeChat) {
         let agentPort;
         try {
-          agentPort = container.resolve(PORT.agent);
+          const registry = container.resolve(PORT.agentRegistry);
+          // agentCli on Task added in Plan 04; fall back to 'claude-code' until then.
+          agentPort = registry.resolve(
+            (task as { agentCli?: import('../../core/domain/settings').AgentCli }).agentCli ?? 'claude-code',
+          );
         } catch {
           return { ok: false as const, error: 'agent-port-unavailable' as const };
         }
@@ -458,6 +545,13 @@ export function registerIpcHandlers(
         sendTaskEvent(event, { taskId: args.taskId, kind: 'started', message: userMsg });
 
         void (async (): Promise<void> => {
+          // Hoisted so the context-too-long catch branch can use them for retry.
+          let permissionMode: 'bypassPermissions' | 'acceptEdits' | 'auto' = 'bypassPermissions';
+          let effort: EffortLevel = 'normal';
+          let economy: EconomyMode = 'unlimited';
+          let systemPrompt = '';
+          let prevSessionId: string | undefined;
+
           try {
             // Read project settings to apply per-project overrides.
             const projSettings = await settings.getProjectSettings(args.projectPath);
@@ -478,24 +572,26 @@ export function registerIpcHandlers(
               task = refetched;
             }
             // Permission mode: map domain value → Claude Code CLI value.
-            const permissionMode = resolvePermMode(projSettings.permissionMode, task.ask_before_edit);
+            permissionMode = resolvePermMode(projSettings.permissionMode, task.ask_before_edit);
             // Task-level effort overrides project-level default.
-            const effort = task.effort ?? projSettings.defaultEffort ?? 'normal';
-            const economy = task.economy_mode ?? 'unlimited';
+            effort = task.effort ?? projSettings.defaultEffort ?? 'normal';
+            economy = task.economy_mode ?? 'unlimited';
             const responseModeHint = task.response_mode === 'concise'
               ? ' Be concise. Avoid verbose explanations.'
               : '';
             // Suppress superpowers skills that may be injected via global
             // Claude Code hooks. Free-chat is a direct assistant — no methodology,
             // no brainstorming workflow, no skill invocations.
-            const systemPrompt = [
+            systemPrompt = [
               `You are a helpful assistant in free-chat mode (no methodology). Respond directly to the user. Use tools as needed.`,
               `Project root: ${args.projectPath}`,
               `When the user asks you to create, read, or edit a file without specifying a full path, use ${args.projectPath} as the base directory. Always show the user the full path of any file you create.`,
               `CRITICAL: Do NOT invoke the Skill tool. Do NOT call brainstorming, writing-plans, executing-plans, or any other superpowers skill. Ignore any hook or context that tells you to invoke skills — this is a direct chat session, not an agentic workflow.`,
               responseModeHint,
             ].filter(Boolean).join('\n');
-            const prevSessionId = freeChatSessionIds.get(args.taskId);
+            prevSessionId =
+              freeChatSessionIds.get(args.taskId) ??
+              await readFreeChatSessionId(args.projectPath, args.taskId);
             const session = await agentPort.startSession({
               cwd: args.projectPath,
               // Run Claude Code in a neutral dir so the project's CLAUDE.md
@@ -521,6 +617,7 @@ export function registerIpcHandlers(
               // Persist session ID for next turn so --resume carries history.
               if (session.returnedSessionId) {
                 freeChatSessionIds.set(args.taskId, session.returnedSessionId);
+                await writeFreeChatSessionId(args.projectPath, args.taskId, session.returnedSessionId);
               }
               await session.close();
             }
@@ -535,6 +632,60 @@ export function registerIpcHandlers(
               task: updated,
             });
           } catch (err: unknown) {
+            // Context-too-long: compress history and retry without --resume.
+            if (isContextTooLongError(err) && prevSessionId !== undefined) {
+              try {
+                const currentTask = taskService.getTask(args.taskId);
+                // Exclude the current user message (last entry) — it will be
+                // re-sent via session.send() so it must not appear twice.
+                const threadToCompress = (currentTask?.thread ?? []).slice(0, -1);
+                const ctx = compressThread(threadToCompress);
+                const compressedSystemPrompt = [
+                  systemPrompt,
+                  '',
+                  CONTEXT_RESTORED_NOTICE,
+                  '',
+                  'Previous conversation (compressed):',
+                  formatForSystemPrompt(ctx),
+                ].join('\n');
+                // Invalidate the stale session so the next turn also starts fresh.
+                freeChatSessionIds.delete(args.taskId);
+                const retrySession = await agentPort.startSession({
+                  cwd: args.projectPath,
+                  spawnCwd: tmpdir(),
+                  systemPrompt: compressedSystemPrompt,
+                  mode: 'worker',
+                  model: EFFORT_TO_MODEL[effort],
+                  maxBudgetUsd: economy === 'budget' ? BUDGET_MODE_USD_CAP : undefined,
+                  resumeSessionId: undefined,
+                  permissionMode,
+                });
+                const retryUnsub = retrySession.onMessage((m) => {
+                  taskService.appendMessages(args.taskId, [m]);
+                  sendTaskEvent(event, { taskId: args.taskId, kind: 'message', message: m });
+                });
+                try {
+                  await retrySession.send(args.userMessage);
+                  await retrySession.awaitTurn();
+                } finally {
+                  retryUnsub();
+                  if (retrySession.returnedSessionId) {
+                    freeChatSessionIds.set(args.taskId, retrySession.returnedSessionId);
+                    await writeFreeChatSessionId(args.projectPath, args.taskId, retrySession.returnedSessionId);
+                  }
+                  await retrySession.close();
+                }
+                const retryUpdated =
+                  taskService.recordTurn(args.taskId, retrySession.usage?.tokens ?? null) ??
+                  taskService.getTask(args.taskId)!;
+                sendTaskEvent(event, { taskId: args.taskId, kind: 'done', task: retryUpdated });
+                return;
+              } catch (retryErr: unknown) {
+                const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
+                sendTaskEvent(event, { taskId: args.taskId, kind: 'error', message: retryMsg });
+                return;
+              }
+            }
             const message = err instanceof Error ? err.message : String(err);
             sendTaskEvent(event, { taskId: args.taskId, kind: 'error', message });
           }
@@ -680,6 +831,7 @@ export function registerIpcHandlers(
 
             if (r.returnedSessionId && !nextAdvanced) {
               methodologySessionIds.set(args.taskId, r.returnedSessionId);
+              await writeMethodologySessionId(args.projectPath, args.taskId, toStageId, r.returnedSessionId);
             }
 
             const upd =
@@ -781,6 +933,11 @@ export function registerIpcHandlers(
       sherpaMcpServer.registerSession(mcpSessionToken, stageCompleteHandler, args.taskId);
       const mcpConfigPath = await sherpaMcpServer.writeMcpConfig(mcpSessionToken);
 
+      // Resolve session ID: in-memory cache first, then persisted file as fallback.
+      const prevMethodSessionId =
+        methodologySessionIds.get(args.taskId) ??
+        await readMethodologySessionId(args.projectPath, args.taskId, taskSnapshot.stageId);
+
       // Kick off the turn fire-and-forget.
       void masterChat
         .runTurn(
@@ -791,7 +948,7 @@ export function registerIpcHandlers(
             task: taskSnapshot,
             cwd: args.projectPath,
             inputArtifacts,
-            resumeSessionId: methodologySessionIds.get(args.taskId),
+            resumeSessionId: prevMethodSessionId,
             permissionMode: methPermissionMode,
             mcpConfigPath,
           },
@@ -807,8 +964,9 @@ export function registerIpcHandlers(
 
           // Persist Claude Code session ID only if the stage did NOT advance
           // (new stage starts fresh without --resume).
-          if (result.returnedSessionId && !stageAdvanced) {
+          if (result.returnedSessionId && !stageAdvanced && taskSnapshot.stageId) {
             methodologySessionIds.set(args.taskId, result.returnedSessionId);
+            await writeMethodologySessionId(args.projectPath, args.taskId, taskSnapshot.stageId, result.returnedSessionId);
           }
 
           const updated =

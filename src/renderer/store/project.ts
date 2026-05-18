@@ -4,6 +4,7 @@ import type { Project, RecentEntry } from '../../core/domain/project';
 import type { AddProjectOptions, AddProjectResult } from '../../core/ports/project_port';
 import { ipcClient } from '../ipc/client';
 import { useTask } from './task';
+import { useNavigation } from './navigation';
 import { restoreLayoutFromSession } from '../hooks/useSessionPersistence';
 
 export interface ProjectState {
@@ -66,7 +67,14 @@ export const useProject = create<ProjectState>((set, _get) => ({
       const session = await ipcClient.session().get(opened.path);
       if (session.activeTaskId) {
         const task = await ipcClient.task().get(session.activeTaskId);
-        if (task) useTask.getState().setCurrent(task);
+        if (task) {
+          useTask.getState().setCurrent(task);
+          useNavigation.getState().openTab({
+            kind: 'task',
+            params: { taskId: task.id },
+            title: task.title ?? task.id,
+          });
+        }
       }
       restoreLayoutFromSession(session);
     } catch (err) {

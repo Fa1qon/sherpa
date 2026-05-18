@@ -289,6 +289,26 @@
 .agentText :global(pre code) { background: transparent; padding: 0; }
 .agentText :global(ul), .agentText :global(ol) { padding-left: 20px; }
 .agentText :global(li) { margin: 2px 0; }
+.agentText :global(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+}
+.agentText :global(th),
+.agentText :global(td) {
+  border: 1px solid var(--border-default);
+  padding: 5px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.agentText :global(thead th) {
+  background: var(--bg-app);
+  font-weight: 600;
+}
+.agentText :global(tbody tr:nth-child(even)) {
+  background: color-mix(in srgb, var(--bg-app) 50%, transparent);
+}
 
 .stageBanner {
   display: flex;

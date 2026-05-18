@@ -5,6 +5,8 @@ import {
   defaultProjectSettings,
   isUserSettings,
   isProjectSettings,
+  type AgentCli,
+  type AgentCredential,
 } from '../../../src/core/domain/settings';
 
 describe('Settings domain', () => {
@@ -204,5 +206,41 @@ describe('ProjectSettings — new fields', () => {
       reviewersPath: '.sherpa/core/reviewers',
     };
     expect(isProjectSettings(legacy)).toBe(true);
+  });
+});
+
+describe('AgentCli extended values', () => {
+  const ALL_AGENT_CLIS: AgentCli[] = [
+    'claude-code', 'codex', 'opencode', 'gemini', 'goose',
+    'amp', 'cursor', 'copilot', 'pi', 'qwen-code', 'kimi', 'aider',
+  ];
+
+  test('all AgentCli values are accepted by isUserSettings', () => {
+    for (const cli of ALL_AGENT_CLIS) {
+      const s = { ...defaultUserSettings(), defaultAgentCli: cli };
+      expect(isUserSettings(s), `failed for ${cli}`).toBe(true);
+    }
+  });
+
+  test('unknown AgentCli value is rejected', () => {
+    const s = { ...defaultUserSettings(), defaultAgentCli: 'unknown-agent' };
+    expect(isUserSettings(s)).toBe(false);
+  });
+
+  test('agentCredentials apikey is accepted by isUserSettings', () => {
+    const cred: AgentCredential = { type: 'apikey', apiKey: 'sk-test' };
+    const s = { ...defaultUserSettings(), agentCredentials: { codex: cred } };
+    expect(isUserSettings(s)).toBe(true);
+  });
+
+  test('agentCredentials oauth is accepted by isUserSettings', () => {
+    const cred: AgentCredential = {
+      type: 'oauth',
+      accessToken: 'tok_abc',
+      refreshToken: 'ref_xyz',
+      expiresAt: Date.now() + 3600_000,
+    };
+    const s = { ...defaultUserSettings(), agentCredentials: { gemini: cred } };
+    expect(isUserSettings(s)).toBe(true);
   });
 });

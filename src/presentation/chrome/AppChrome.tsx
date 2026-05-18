@@ -7,6 +7,7 @@ import { useNavigation } from '../../renderer/store/navigation';
 import { useProject } from '../../renderer/store/project';
 import { useRightSidebar } from '../../renderer/store/right_sidebar';
 import { usePanelRegistry } from '../../renderer/store/panel_registry';
+import { useQuickSearch } from '../../renderer/store/quick_search';
 import '../../renderer/styles/chrome.css';
 
 export interface AppChromeProps {
@@ -25,6 +26,7 @@ export function AppChrome({ onAction }: AppChromeProps): ReactElement {
   const hasRightPanel = activeTab ? getSlot(`sidebar.right:${activeTab.kind}`).length > 0 : false;
   const rightSidebarOpen = useRightSidebar((s) => s.isOpen);
   const toggleRightSidebar = useRightSidebar((s) => s.toggle);
+  const openQuickSearch = useQuickSearch((s) => s.open_);
 
   // Close menu on outside click
   useEffect(() => {
@@ -41,6 +43,12 @@ export function AppChrome({ onAction }: AppChromeProps): ReactElement {
     function onKey(e: KeyboardEvent) {
       const cmd = e.metaKey || e.ctrlKey;
       if (!cmd) return;
+      // ⌘P — quick file search
+      if (e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        openQuickSearch();
+        return;
+      }
       // ⌘N — project.new
       if (e.key.toLowerCase() === 'n') {
         e.preventDefault();

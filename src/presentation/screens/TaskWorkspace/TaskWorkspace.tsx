@@ -231,22 +231,23 @@ export function TaskWorkspace(): ReactElement {
   }
 
   if (!task) {
-    // New task tab — render settings + input without a thread.
+    // New task tab — render settings inline (filling available space) above input.
     return (
       <div className={styles.workspace} data-testid="task-workspace">
         <div className={styles.body}>
           <div className={styles.main}>
+            <TaskSettingsPanel
+              inline
+              task={{ settings_locked: false }}
+              settings={localSettings}
+              onChange={(patch) => setLocalSettings((prev) => ({ ...prev, ...patch }))}
+              expanded={settingsPanelExpanded}
+              onToggleExpand={() => setSettingsPanelExpanded((v) => !v)}
+              methodologies={methodologyOptions}
+              localTitle={titleDraft}
+              onTitleChange={setTitleDraft}
+            />
             <div className={styles.inputArea}>
-              <TaskSettingsPanel
-                task={{ settings_locked: false }}
-                settings={localSettings}
-                onChange={(patch) => setLocalSettings((prev) => ({ ...prev, ...patch }))}
-                expanded={settingsPanelExpanded}
-                onToggleExpand={() => setSettingsPanelExpanded((v) => !v)}
-                methodologies={methodologyOptions}
-                localTitle={titleDraft}
-                onTitleChange={setTitleDraft}
-              />
               <ChatInput
                 onBeforeSend={handleBeforeFirstSend}
                 onSettingsToggle={() => setSettingsPanelExpanded((v) => !v)}
@@ -367,7 +368,7 @@ export function TaskWorkspace(): ReactElement {
           {tab === 'chat' ? (
             <>
               <ChatThread messages={task.thread} stageTransitions={stageTransitions} />
-              {sending && <WorkingIndicator counters={{ ...running, onOpenDrawer: () => setDrawerOpen(true) }} />}
+              {(sending || runtimeStatus === 'running') && <WorkingIndicator counters={{ ...running, onOpenDrawer: () => setDrawerOpen(true) }} />}
               {!sending && task.totalTokens.input + task.totalTokens.output > 0 && (() => {
                 const totalTokens = task.totalTokens;
                 const showCost =

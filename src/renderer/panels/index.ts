@@ -7,7 +7,6 @@ import { ArtifactsPanelConnected } from '../../presentation/screens/TaskWorkspac
 import { TodoPanelConnected } from '../../presentation/screens/TaskWorkspace/TodoPanelConnected';
 import { ProjectDisplay } from '../../presentation/statusbar/ProjectDisplay';
 import { TokenDisplay } from '../../presentation/statusbar/TokenDisplay';
-import { BrowserPanelConnected } from '../../presentation/panels/BrowserPanelConnected';
 
 // Task right-sidebar panels
 panelRegistry.register({
@@ -39,13 +38,8 @@ panelRegistry.register({
   title: 'TODO',
   priority: 5,
 });
-panelRegistry.register({
-  id: 'task.browser',
-  slot: 'sidebar.right:task',
-  component: BrowserPanelConnected,
-  title: 'Browser',
-  priority: 40,
-});
+// Browser panel intentionally not shown in sidebar —
+// the browser service is AI-driven; no user-facing panel needed.
 
 // Status bar registrations (zero-prop components, safe to register directly)
 panelRegistry.register({

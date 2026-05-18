@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type TabKind = 'task' | 'methodology-editor' | 'settings' | 'project-settings' | 'file' | 'tracker';
+export type TabKind = 'task' | 'methodology-editor' | 'settings' | 'project-settings' | 'file' | 'tracker' | 'browser';
 
 export interface Tab {
   readonly id: string;
@@ -31,6 +31,7 @@ export interface NavigationState {
 function tabKey(req: OpenTabRequest): string {
   if (req.kind === 'task' && req.params?.taskId) return `task:${req.params.taskId}`;
   if (req.kind === 'file' && req.params?.relPath) return `file:${req.params.relPath}`;
+  if (req.kind === 'browser' && req.params?.url) return `browser:${req.params.url}`;
   return req.kind;
 }
 

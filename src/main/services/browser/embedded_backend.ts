@@ -3,6 +3,7 @@ import { WebContentsView } from 'electron';
 import type { BrowserWindow } from 'electron';
 import type { BrowserPort, ScreenshotResult } from '../../../core/ports/browser_port';
 import type { BrowserEvent } from '../../../core/domain/browser';
+import { proxyManager } from '../proxy_manager';
 
 const PANEL_HEIGHT_OFFSET = 120; // leave room for Sherpa chrome at top
 
@@ -16,7 +17,7 @@ export class EmbeddedBackend implements BrowserPort {
     private readonly mainWindow: BrowserWindow,
   ) {}
 
-  init(): void {
+  async init(): Promise<void> {
     this.view = new WebContentsView({
       webPreferences: {
         nodeIntegration: false,
@@ -34,6 +35,13 @@ export class EmbeddedBackend implements BrowserPort {
     this.mainWindow.contentView.addChildView(this.view);
 
     const wc = this.view.webContents;
+
+    const aiProxyUrl = proxyManager.getProxyUrl('aiBrowser');
+    const aiNoProxy = proxyManager.getNoProxy('aiBrowser');
+    await wc.session.setProxy({
+      proxyRules: aiProxyUrl ?? 'direct://',
+      ...(aiNoProxy !== undefined ? { proxyBypassRules: aiNoProxy } : {}),
+    });
 
     wc.on('did-navigate', (_e: unknown, url: string) => {
       this.emitter.emit('event', { type: 'navigate', url, ts: Date.now() } satisfies BrowserEvent);

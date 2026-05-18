@@ -42,6 +42,15 @@ export function TasksPanel(): ReactElement {
     refresh();
   }, [refresh]);
 
+  // Refresh the task list when any task event arrives so externally-created
+  // tasks (e.g. via IPC from a test or plugin) appear without requiring a
+  // manual sidebar refresh.
+  useEffect(() => {
+    return window.sherpa.task.onEvent(() => {
+      refresh();
+    });
+  }, [refresh]);
+
   const handleNewTask = (): void => {
     if (!project) return;
     setCurrent(null);
@@ -127,13 +136,21 @@ export function TasksPanel(): ReactElement {
                   onContextMenu={(e) => handleContextMenu(e, task)}
                   title={task.title ?? task.id}
                 >
-                  <span className={taskStyles.title}>
-                    {task.title ?? t('task.untitled', 'Без названия')}
+                  <span className={taskStyles.titleGroup}>
+                    <span className={taskStyles.title}>
+                      {task.title ?? t('task.untitled', 'Без названия')}
+                    </span>
+                    {task.methodologyId && task.stageId && (
+                      <span
+                        className={taskStyles.stageLabel}
+                        data-testid="stage-label"
+                        title={task.stageId}
+                      >
+                        {task.stageId}
+                      </span>
+                    )}
                   </span>
                   <span className={taskStyles.meta}>
-                    {task.tracker_stage_id && (
-                      <span className={taskStyles.stageBadge} title={task.tracker_stage_id} />
-                    )}
                     {task.thread.length > 0 && (
                       <span className={taskStyles.msgCount}>
                         {task.thread.filter((m) => m.role === 'user' || m.role === 'agent').length}

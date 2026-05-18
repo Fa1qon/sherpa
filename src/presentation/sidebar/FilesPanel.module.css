@@ -108,3 +108,31 @@
 }
 
 .empty { padding: 16px; color: var(--fg-muted); font-size: 12px; }
+
+.ctxMenu {
+  position: fixed;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+  z-index: 300;
+  min-width: 160px;
+  padding: 4px 0;
+}
+
+.ctxItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 14px;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  color: var(--fg-default);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ctxItem:hover {
+  background: var(--bg-hover);
+}

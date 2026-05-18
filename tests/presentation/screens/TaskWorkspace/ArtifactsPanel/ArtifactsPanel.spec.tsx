@@ -9,6 +9,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { ArtifactsPanel } from '../../../../../src/presentation/screens/TaskWorkspace/ArtifactsPanel';
 import { useTask } from '../../../../../src/renderer/store/task';
+import { useNavigation } from '../../../../../src/renderer/store/navigation';
 import en from '../../../../../src/renderer/locales/en.json';
 
 if (!i18n.isInitialized) {
@@ -45,8 +46,12 @@ function renderPanel(pollMs: number = 0) {
   );
 }
 
+let openTabMock: ReturnType<typeof vi.fn>;
+
 beforeEach(() => {
   (window as { sherpa?: unknown }).sherpa = undefined;
+  openTabMock = vi.fn().mockReturnValue('tab-id');
+  useNavigation.setState({ openTab: openTabMock } as never);
   // Reset runtime so the runtime-driven refresh effect doesn't carry
   // state between tests.
   useTask.setState({
@@ -78,24 +83,17 @@ describe('ArtifactsPanel', () => {
     expect(screen.getByTestId('artifact-row-chat_01/plan.md')).toBeInTheDocument();
   });
 
-  test('clicking a row fetches the file content via artifactRead', async () => {
+  test('clicking a row opens the file in a new tab', async () => {
     const user = userEvent.setup();
-    const { read } = installMocks({
-      list: vi.fn().mockResolvedValue(['requirements.md']),
-      read: vi.fn().mockResolvedValue({ ok: true, content: '# Requirements\nhello' }),
-    });
+    installMocks({ list: vi.fn().mockResolvedValue(['requirements.md']) });
     renderPanel();
     const row = await screen.findByTestId('artifact-row-requirements.md');
     await user.click(row);
-    await waitFor(() => {
-      expect(read).toHaveBeenCalledWith({
-        projectPath: '/proj',
-        taskId: 'task-1',
-        relPath: 'requirements.md',
-      });
+    expect(openTabMock).toHaveBeenCalledWith({
+      kind: 'file',
+      params: { relPath: '.sherpa/tasks/task-1/requirements.md' },
+      title: 'requirements.md',
     });
-    const preview = await screen.findByTestId('artifact-preview-content');
-    expect(preview.textContent).toBe('# Requirements\nhello');
   });
 
   test('refresh button calls artifactsList again', async () => {
@@ -112,17 +110,16 @@ describe('ArtifactsPanel', () => {
     });
   });
 
-  test('surfaces read errors in the preview', async () => {
+  test('clicking a nested artifact builds the correct tab relPath', async () => {
     const user = userEvent.setup();
-    installMocks({
-      list: vi.fn().mockResolvedValue(['bad.md']),
-      read: vi.fn().mockResolvedValue({ ok: false, error: 'ENOENT' }),
-    });
+    installMocks({ list: vi.fn().mockResolvedValue(['chat_01/plan.md']) });
     renderPanel();
-    const row = await screen.findByTestId('artifact-row-bad.md');
-    await user.click(row);
-    const err = await screen.findByTestId('artifact-preview-error');
-    expect(err.textContent).toContain('ENOENT');
+    await user.click(await screen.findByTestId('artifact-row-chat_01/plan.md'));
+    expect(openTabMock).toHaveBeenCalledWith({
+      kind: 'file',
+      params: { relPath: '.sherpa/tasks/task-1/chat_01/plan.md' },
+      title: 'plan.md',
+    });
   });
 
   // ── Plan 8-fix Task 3 — runtime-driven refresh ────────────────────────────
@@ -147,16 +144,12 @@ describe('ArtifactsPanel', () => {
     });
   });
 
-  test('closing the preview hides it', async () => {
+  test('each click opens a new tab (openTab called once per click)', async () => {
     const user = userEvent.setup();
-    installMocks({
-      list: vi.fn().mockResolvedValue(['a.md']),
-      read: vi.fn().mockResolvedValue({ ok: true, content: 'X' }),
-    });
+    installMocks({ list: vi.fn().mockResolvedValue(['a.md', 'b.md']) });
     renderPanel();
     await user.click(await screen.findByTestId('artifact-row-a.md'));
-    await screen.findByTestId('artifact-preview-content');
-    await user.click(screen.getByTestId('artifact-preview-close'));
-    expect(screen.queryByTestId('artifact-preview')).toBeNull();
+    await user.click(screen.getByTestId('artifact-row-b.md'));
+    expect(openTabMock).toHaveBeenCalledTimes(2);
   });
 });

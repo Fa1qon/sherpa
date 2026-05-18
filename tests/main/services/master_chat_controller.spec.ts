@@ -4,6 +4,7 @@ import {
   adaptForUser,
 } from '../../../src/main/services/master_chat_controller';
 import { SystemPromptAssembler } from '../../../src/main/services/system_prompt_assembler';
+import { AgentRegistry } from '../../../src/main/services/agent_registry';
 import type { AgentPort, AgentSession } from '../../../src/core/ports/agent_port';
 import type { AgentMessage, AgentSessionConfig } from '../../../src/core/domain/agent';
 import type { Methodology, Stage } from '../../../src/core/domain/methodology';
@@ -42,6 +43,12 @@ const task = {
 } as unknown as Task;
 
 const stubAssembler = new SystemPromptAssembler();
+
+function makeCtrl(port: AgentPort, assembler = stubAssembler): MasterChatController {
+  const registry = new AgentRegistry();
+  registry.register('claude-code', port);
+  return new MasterChatController(registry, assembler);
+}
 
 function msg(role: AgentMessage['role'], text: string, id = `m-${Math.random()}`): AgentMessage {
   return { id, role, text, timestamp: new Date().toISOString() };
@@ -170,7 +177,7 @@ describe('MasterChatController', () => {
     const { port, captured, startCalls } = makeMockPort([
       { emitOnSend: [workerToolMsg, workerAgentMsg] },
     ]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     const result = await ctl.runTurn({
       userMessage: 'Сделай foo',
@@ -198,7 +205,7 @@ describe('MasterChatController', () => {
   test('stage tag stripped from translatedText', async () => {
     const workerAgentMsg = msg('agent', '[W2 | #id Stage]\nДело сделано.');
     const { port } = makeMockPort([{ emitOnSend: [workerAgentMsg] }]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     const result = await ctl.runTurn({ userMessage: 'go', methodology, stage, task, cwd: '/tmp/proj' });
 
@@ -208,7 +215,7 @@ describe('MasterChatController', () => {
   test('system prompt assembled via SystemPromptAssembler', async () => {
     const workerAgentMsg = msg('agent', 'done');
     const { port, startCalls } = makeMockPort([{ emitOnSend: [workerAgentMsg] }]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     await ctl.runTurn({ userMessage: 'go', methodology, stage, task, cwd: '/tmp/proj' });
 
@@ -219,7 +226,7 @@ describe('MasterChatController', () => {
 
   test('resumeSessionId passed to worker when provided in turn', async () => {
     const { port, startCalls } = makeMockPort([{ emitOnSend: [msg('agent', 'ok')] }]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     await ctl.runTurn({
       userMessage: 'second message',
@@ -237,7 +244,7 @@ describe('MasterChatController', () => {
     const { port } = makeMockPort([
       { emitOnSend: [msg('agent', 'ok')], returnedSessionId: 'new-session-id' },
     ]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     const result = await ctl.runTurn({ userMessage: 'go', methodology, stage, task, cwd: '/tmp/proj' });
 
@@ -247,7 +254,7 @@ describe('MasterChatController', () => {
   test('no agent text → translatedText empty, no system message emitted', async () => {
     const workerToolMsg = msg('tool', 'Bash echo');
     const { port, startCalls } = makeMockPort([{ emitOnSend: [workerToolMsg] }]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     const received: AgentMessage[] = [];
     const result = await ctl.runTurn(
@@ -267,7 +274,7 @@ describe('MasterChatController', () => {
     const workerToolMsg = msg('tool', 'Read file');
 
     const { port } = makeMockPort([{ emitOnSend: [workerToolMsg, workerAgentMsg] }]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     const received: AgentMessage[] = [];
     await ctl.runTurn(
@@ -289,7 +296,7 @@ describe('MasterChatController', () => {
         },
       },
     ]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     await expect(
       ctl.runTurn({ userMessage: 'kaboom', methodology, stage, task, cwd: '/tmp/proj' }),
@@ -307,7 +314,7 @@ describe('MasterChatController', () => {
         usage: { cost: 0.01, tokens: { input: 1, output: 2 } },
       },
     ]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     const result = await ctl.runTurn({ userMessage: 'go', methodology, stage, task, cwd: '/tmp/proj' });
 
@@ -317,7 +324,7 @@ describe('MasterChatController', () => {
 
   test('cost and tokens are null when worker has no usage', async () => {
     const { port } = makeMockPort([{ emitOnSend: [msg('tool', 'bash')] }]);
-    const ctl = new MasterChatController(port, stubAssembler);
+    const ctl = makeCtrl(port, stubAssembler);
 
     const result = await ctl.runTurn({ userMessage: 'noop', methodology, stage, task, cwd: '/tmp' });
 

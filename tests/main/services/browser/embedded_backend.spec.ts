@@ -8,6 +8,9 @@ const mockWebContents = {
   getURL: vi.fn().mockReturnValue('https://example.com'),
   on: vi.fn(),
   once: vi.fn(),
+  session: {
+    setProxy: vi.fn().mockResolvedValue(undefined),
+  },
 };
 const mockWebContentsView = {
   webContents: mockWebContents,

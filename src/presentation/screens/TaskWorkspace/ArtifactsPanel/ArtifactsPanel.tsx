@@ -5,12 +5,7 @@
 // useTask().runtime.artifacts.length). The 1500ms polling stays as a
 // fallback for filesystem changes the engine didn't trace.
 //
-// Polls `window.sherpa.task.artifactsList` every 1500ms to surface files
-// the engine writes inside `<project>/.sherpa/tasks/<taskId>/`. Clicking a
-// row fetches it via `task.artifactRead` and shows its contents in a
-// preformatted preview pane. The preview pane is local to this panel.
-//
-// Errors are surfaced inline and never crash the panel.
+// Clicking an artifact opens it in a new tab (same as FilesPanel).
 import {
   useCallback,
   useEffect,
@@ -20,6 +15,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTask } from '../../../../renderer/store/task';
+import { useNavigation } from '../../../../renderer/store/navigation';
 import styles from './ArtifactsPanel.module.css';
 
 interface Props {
@@ -32,12 +28,6 @@ interface Props {
   readonly pollMs?: number;
 }
 
-type PreviewState =
-  | { readonly kind: 'closed' }
-  | { readonly kind: 'loading'; readonly path: string }
-  | { readonly kind: 'ok'; readonly path: string; readonly content: string }
-  | { readonly kind: 'error'; readonly path: string; readonly message: string };
-
 export function ArtifactsPanel({
   projectPath,
   taskId,
@@ -45,8 +35,8 @@ export function ArtifactsPanel({
 }: Props): ReactElement {
   const { t } = useTranslation();
   const [files, setFiles] = useState<readonly string[]>([]);
-  const [preview, setPreview] = useState<PreviewState>({ kind: 'closed' });
   const mountedRef = useRef<boolean>(true);
+  const openTab = useNavigation((s) => s.openTab);
 
   const refresh = useCallback(async (): Promise<void> => {
     try {
@@ -95,31 +85,17 @@ export function ArtifactsPanel({
     }
   }, [runtimeArtifactCount, refresh]);
 
-  const openFile = useCallback(
-    async (relPath: string): Promise<void> => {
-      setPreview({ kind: 'loading', path: relPath });
-      try {
-        const result = await window.sherpa.task.artifactRead({
-          projectPath,
-          taskId,
-          relPath,
-        });
-        if (!mountedRef.current) return;
-        if (result.ok) {
-          setPreview({ kind: 'ok', path: relPath, content: result.content });
-        } else {
-          setPreview({ kind: 'error', path: relPath, message: result.error });
-        }
-      } catch (err) {
-        if (!mountedRef.current) return;
-        setPreview({
-          kind: 'error',
-          path: relPath,
-          message: (err as Error).message,
-        });
-      }
+  const openInTab = useCallback(
+    (relPath: string): void => {
+      const name = relPath.split('/').pop() ?? relPath;
+      // relPath is relative to the task dir; build project-relative path.
+      openTab({
+        kind: 'file',
+        params: { relPath: `.sherpa/tasks/${taskId}/${relPath}` },
+        title: name,
+      });
     },
-    [projectPath, taskId],
+    [taskId, openTab],
   );
 
   return (
@@ -146,7 +122,7 @@ export function ArtifactsPanel({
               <button
                 type="button"
                 className={styles.fileBtn}
-                onClick={() => void openFile(f)}
+                onClick={() => openInTab(f)}
                 data-testid={`artifact-row-${f}`}
                 title={f}
               >
@@ -155,35 +131,6 @@ export function ArtifactsPanel({
             </li>
           ))}
         </ul>
-      )}
-      {preview.kind !== 'closed' && (
-        <div className={styles.previewBox} data-testid="artifact-preview">
-          <div className={styles.previewHeader}>
-            <span className={styles.previewPath}>{preview.path}</span>
-            <button
-              type="button"
-              className={styles.closeBtn}
-              onClick={() => setPreview({ kind: 'closed' })}
-              data-testid="artifact-preview-close"
-              aria-label={t('artifactsPanel.close', 'Close')}
-            >
-              ×
-            </button>
-          </div>
-          {preview.kind === 'loading' && (
-            <div className={styles.previewLoading}>{t('common.loading', 'Loading…')}</div>
-          )}
-          {preview.kind === 'error' && (
-            <div className={styles.previewError} data-testid="artifact-preview-error">
-              {t('artifactsPanel.loadError', { message: preview.message })}
-            </div>
-          )}
-          {preview.kind === 'ok' && (
-            <pre className={styles.previewContent} data-testid="artifact-preview-content">
-              {preview.content}
-            </pre>
-          )}
-        </div>
       )}
     </section>
   );

@@ -28,19 +28,20 @@ interface Props {
 function classifyStage(
   meta: TaskMeta | null,
   runtime: TaskRuntime,
+  taskStageId: string | undefined,
   stageId: string,
 ): StageStatus {
-  // Runtime takes priority when it has signal: completion is a union of
-  // runtime.completedStages and meta history; current-stage is whichever
-  // has it set (runtime wins because it's freshest).
+  // Completion: union of runtime events + persisted meta history.
   const runtimeCompleted = runtime.completedStages.includes(stageId);
   const history = meta?.stage_history ?? [];
   const metaCompleted = history.some(
     (h) => h.stage_id === stageId && Boolean(h.completed_at),
   );
   if (runtimeCompleted || metaCompleted) return 'completed';
+  // Current: runtime wins (freshest), then meta, then task.stageId as fallback.
   if (runtime.currentStageId === stageId) return 'current';
   if (meta?.current_stage === stageId) return 'current';
+  if (taskStageId === stageId) return 'current';
   return 'pending';
 }
 
@@ -59,6 +60,7 @@ function iconFor(status: StageStatus): string {
 export function StagesPanel({ methodology, meta }: Props): ReactElement {
   const { t } = useTranslation();
   const runtime = useTask((s) => s.runtime);
+  const taskStageId = useTask((s) => s.current?.stageId);
   const stages = methodology?.stages ?? [];
 
   return (
@@ -73,7 +75,7 @@ export function StagesPanel({ methodology, meta }: Props): ReactElement {
       ) : (
         <ul className={styles.list} role="list">
           {stages.map((s) => {
-            const status = classifyStage(meta, runtime, s.id);
+            const status = classifyStage(meta, runtime, taskStageId, s.id);
             const statusLabel = t(`stagesPanel.status.${status}`);
             return (
               <li

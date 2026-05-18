@@ -1,8 +1,9 @@
-import type { AgentPort } from '../../core/ports/agent_port';
 import type { AgentMessage } from '../../core/domain/agent';
 import type { Methodology, Stage } from '../../core/domain/methodology';
 import type { Task } from '../../core/domain/task';
 import { SystemPromptAssembler } from './system_prompt_assembler';
+import type { AgentRegistry } from './agent_registry';
+import type { AgentCli } from '../../core/domain/settings';
 
 /**
  * Adapts agent output text for display to the end user.
@@ -32,6 +33,8 @@ export interface MasterChatTurn {
    * history without re-reading the same files from scratch.
    */
   readonly resumeSessionId?: string;
+  /** Which agent CLI adapter to use for this turn. Defaults to 'claude-code'. */
+  readonly agentCli?: AgentCli;
   /** Permission mode override — passed through to AgentSessionConfig. */
   readonly permissionMode?: 'bypassPermissions' | 'acceptEdits' | 'auto';
   /**
@@ -66,7 +69,7 @@ export class MasterChatController {
   private readonly assembler: SystemPromptAssembler;
 
   constructor(
-    private readonly agent: AgentPort,
+    private readonly registry: AgentRegistry,
     assembler?: SystemPromptAssembler,
   ) {
     this.assembler = assembler ?? new SystemPromptAssembler();
@@ -86,7 +89,8 @@ export class MasterChatController {
     });
 
     // 2. Worker run — resumeSessionId carries conversation history across turns.
-    const worker = await this.agent.startSession({
+    const agent = this.registry.resolve(turn.agentCli ?? 'claude-code');
+    const worker = await agent.startSession({
       cwd: turn.cwd,
       systemPrompt: assembled.systemPrompt,
       mode: 'worker',

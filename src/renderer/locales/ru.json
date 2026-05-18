@@ -86,7 +86,9 @@
     "header": "{{methodology}} — этап {{stage}}",
     "settings": {
       "title_label": "Название задачи",
-      "title_placeholder": "Что делаем?"
+      "title_placeholder": "Что делаем?",
+      "agentCli": "Агент",
+      "agentCliDefault": "По умолчанию (настройки проекта / пользователя)"
     },
     "journal": {
       "title": "Журнал событий",
@@ -256,6 +258,8 @@
       "cost": "Учёт стоимости",
       "compliance": "Отчёт о соответствии",
       "advanced": "Дополнительно",
+      "network": "Сеть и прокси",
+      "agents": "Агенты",
       "project": "Проект",
       "about": "О программе"
     },
@@ -299,6 +303,45 @@
       "title": "Журнал событий",
       "showToggle": "Показывать панель журнала событий"
     },
+    "network": {
+      "title": "Сеть и прокси",
+      "proxyServers": "Прокси-серверы",
+      "addProxy": "Добавить прокси",
+      "noProxies": "Прокси-конфигурации не заданы.",
+      "entryDialog": {
+        "addTitle": "Добавить прокси",
+        "editTitle": "Редактировать прокси",
+        "name": "Название",
+        "type": "Тип",
+        "host": "Хост",
+        "port": "Порт",
+        "auth": "Аутентификация",
+        "username": "Логин",
+        "password": "Пароль",
+        "noProxy": "Исключения (no-proxy)",
+        "noProxyHint": "Через запятую: localhost,127.0.0.1",
+        "save": "Сохранить",
+        "cancel": "Отмена"
+      },
+      "trafficRouting": "Маршрутизация трафика",
+      "targets": {
+        "claudeAgent": "Claude Code (агент ИИ)",
+        "userBrowser": "Браузер пользователя",
+        "aiBrowser": "ИИ-браузер (headless)",
+        "webSearch": "Веб-поиск"
+      },
+      "direct": "Напрямую (без прокси)"
+    },
+    "agents": {
+      "description": "Управление API-ключами и аутентификацией для каждого AI-агента. Учётные данные хранятся в ваших локальных настройках.",
+      "statusSet": "Подключён ({{type}})",
+      "statusNotSet": "Ключ не задан",
+      "noKeyNeeded": "Использует Ollama или локальную аутентификацию — ключ не нужен",
+      "oauthNote": "OAuth — аутентификация через CLI агента",
+      "keyPlaceholder": "Вставьте API-ключ…",
+      "save": "Сохранить",
+      "revoke": "Отозвать"
+    },
     "about": {
       "version": "Версия",
       "license": "Лицензия"
@@ -329,7 +372,8 @@
     "search": "Поиск",
     "vcs": "Контроль версий",
     "extensions": "Расширения",
-    "activeTasks": "{{count}} активных"
+    "activeTasks": "{{count}} активных",
+    "browser": "Браузер"
   },
   "sidebar": {
     "files": "Файлы",

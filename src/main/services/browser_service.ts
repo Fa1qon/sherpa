@@ -26,7 +26,7 @@ export class BrowserService {
     } else {
       if (!mainWindow) throw new Error('mainWindow required for embedded mode');
       const backend = new EmbeddedBackend(taskId, mainWindow);
-      backend.init();
+      await backend.init();
       session = new BrowserSession(taskId, 'embedded', backend);
     }
 

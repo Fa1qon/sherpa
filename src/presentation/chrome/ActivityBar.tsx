@@ -8,10 +8,12 @@ import {
   Search,
   GitBranch,
   Puzzle,
+  Globe,
   type LucideProps,
 } from 'lucide-react';
 import { useSideBar, type Activity } from '../../renderer/store/sidebar';
 import { useProject } from '../../renderer/store/project';
+import { useNavigation } from '../../renderer/store/navigation';
 import { ipcClient } from '../../renderer/ipc/client';
 import styles from './ActivityBar.module.css';
 
@@ -32,7 +34,14 @@ interface StubItem {
   readonly labelKey: string;
 }
 
-type Item = SidebarItem | StubItem;
+interface ActionItem {
+  readonly kind: 'action';
+  readonly id: string;
+  readonly Icon: LucideIcon;
+  readonly labelKey: string;
+}
+
+type Item = SidebarItem | StubItem | ActionItem;
 
 function useActiveTaskCount(): number {
   const project = useProject((s) => s.current);
@@ -57,12 +66,14 @@ export function ActivityBar(): ReactElement {
   const { t } = useTranslation();
   const sidebarActivity = useSideBar((s) => s.activity);
   const toggleSidebar = useSideBar((s) => s.toggle);
+  const openTab = useNavigation((s) => s.openTab);
   const activeTaskCount = useActiveTaskCount();
 
   const TOP_ITEMS: readonly Item[] = [
     { kind: 'sidebar', activity: 'files', Icon: FolderTree, labelKey: 'sidebar.files' },
     { kind: 'sidebar', activity: 'tasks', Icon: LayoutList, labelKey: 'sidebar.tasks', badge: activeTaskCount },
     { kind: 'sidebar', activity: 'library', Icon: Library, labelKey: 'sidebar.library' },
+    { kind: 'action', id: 'browser', Icon: Globe, labelKey: 'activityBar.browser' },
   ];
 
   const BOTTOM_ITEMS: readonly Item[] = [
@@ -76,9 +87,12 @@ export function ActivityBar(): ReactElement {
     const isActive = item.kind === 'sidebar' && sidebarActivity === item.activity;
     const Icon = item.Icon;
     const label = t(item.labelKey, item.labelKey);
-    const key = item.kind === 'sidebar' ? `s:${item.activity}` : `stub:${item.id}`;
+    const key = item.kind === 'sidebar' ? `s:${item.activity}` : `${item.kind}:${item.id}`;
     const onClick = (): void => {
       if (item.kind === 'sidebar') toggleSidebar(item.activity);
+      if (item.kind === 'action' && item.id === 'browser') {
+        openTab({ kind: 'browser', title: t('activityBar.browser', 'Browser') });
+      }
     };
     const badge = item.kind === 'sidebar' ? item.badge : undefined;
     return (

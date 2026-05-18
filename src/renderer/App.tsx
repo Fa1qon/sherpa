@@ -6,11 +6,12 @@ import { I18nProvider } from './providers/I18nProvider';
 import { useProject } from './store/project';
 import { useSettings } from './store/settings';
 import { useNavigation, type Tab } from './store/navigation';
-import { AppChrome, TabBar, ActivityBar, SideBar, Splitter, RightSidebar, BottomPanel, StatusBar } from '../presentation/chrome';
+import { AppChrome, TabBar, ActivityBar, SideBar, Splitter, RightSidebar, BottomPanel, StatusBar, QuickSearch } from '../presentation/chrome';
 import { useSideBar } from './store/sidebar';
 import { useRightSidebar } from './store/right_sidebar';
 import { useTranslation } from 'react-i18next';
 import { FileViewer } from '../presentation/fileviewer/FileViewer';
+import { BrowserTab } from '../presentation/screens/BrowserTab/BrowserTab';
 import { KanbanBoard } from '../presentation/screens/Tracker/KanbanBoard';
 import { ProjectPicker } from '../presentation/screens/ProjectPicker';
 import { EmptyWorkspace } from '../presentation/screens/EmptyWorkspace';
@@ -18,6 +19,7 @@ import { TaskWorkspace } from '../presentation/screens/TaskWorkspace';
 import { Settings } from '../presentation/screens/Settings';
 import { Library } from '../presentation/screens/Library';
 import { useTask } from './store/task';
+import { useQuickSearch } from './store/quick_search';
 import { AboutDialog } from '../presentation/components/AboutDialog';
 import { ipcClient } from './ipc/client';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
@@ -147,6 +149,12 @@ function Shell(): ReactElement {
             openTab({ kind: 'task', params: { taskId: tempId }, title: t('task.new', 'Новая задача') });
           }
           return;
+        case 'task.find':
+          useQuickSearch.getState().open_();
+          return;
+        case 'tools.openBrowser':
+          openTab({ kind: 'browser', title: 'Browser' });
+          return;
         default:
           return;
       }
@@ -191,6 +199,7 @@ function Shell(): ReactElement {
         </button>
       )}
       {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
+      <QuickSearch />
     </div>
   );
 }
@@ -201,6 +210,7 @@ interface TabContentProps {
 }
 
 function TabContent({ tab, onAction }: TabContentProps): ReactElement {
+  const projectPath = useProject((s) => s.current?.path);
   switch (tab.kind) {
     case 'task':
       return <TaskContent />;
@@ -212,8 +222,18 @@ function TabContent({ tab, onAction }: TabContentProps): ReactElement {
       const methodologyId = tab.params?.methodologyId;
       return <Library methodologyId={methodologyId} />;
     }
-    case 'file':
+    case 'file': {
+      const relPath = tab.params?.relPath ?? '';
+      if (relPath.toLowerCase().endsWith('.html') && projectPath) {
+        // Normalise to forward slashes; prepend extra / for Windows drive letters.
+        const abs = `${projectPath}/${relPath}`.replace(/\\/g, '/');
+        const fileUrl = abs.startsWith('/') ? `file://${abs}` : `file:///${abs}`;
+        return <BrowserTab initialUrl={fileUrl} />;
+      }
       return <FileViewer />;
+    }
+    case 'browser':
+      return <BrowserTab initialUrl={tab.params?.url} />;
     case 'tracker':
       return <KanbanBoard />;
     default:

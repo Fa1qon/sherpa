@@ -7,6 +7,7 @@ import type {
   MethodologySelectionMode,
   StrictnessMode,
 } from '../../../../core/domain/task';
+import type { AgentCli } from '../../../../core/domain/settings';
 import { type InvolvementPreset, INVOLVEMENT_PRESETS, detectPreset } from '../../../../core/domain/involvement';
 import styles from './TaskSettingsPanel.module.css';
 
@@ -19,6 +20,7 @@ export interface LocalTaskSettings {
   readonly economy_mode: EconomyMode;
   readonly compliance_review_enabled: boolean;
   readonly ask_before_edit: boolean;
+  readonly agentCli?: AgentCli;
 }
 
 export function defaultLocalSettings(): LocalTaskSettings {
@@ -49,6 +51,8 @@ interface Props {
   readonly onTitleChange?: (title: string) => void;
   /** Called when user clicks "Apply" on a locked (already-started) task. */
   readonly onApply?: () => void;
+  /** Render as an inline block filling flex space instead of an absolute popup. */
+  readonly inline?: boolean;
 }
 
 export function TaskSettingsPanel({
@@ -61,6 +65,7 @@ export function TaskSettingsPanel({
   localTitle,
   onTitleChange,
   onApply,
+  inline,
 }: Props): ReactElement | null {
   const { t } = useTranslation();
 
@@ -79,7 +84,7 @@ export function TaskSettingsPanel({
   const locked = task.settings_locked ?? false;
 
   return (
-    <div className={styles.popup} data-testid="task-settings-panel">
+    <div className={inline ? styles.inlinePanel : styles.popup} data-testid="task-settings-panel">
       <div className={styles.popupHeader}>
         <span className={styles.popupTitle}>{t('taskSettings.title')}</span>
         <button
@@ -235,6 +240,25 @@ export function TaskSettingsPanel({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className={styles.popupRow}>
+        <span className={styles.popupLabel}>
+          {t('task.settings.agentCli', 'Agent')}
+        </span>
+        <select
+          className={styles.popupSelect}
+          value={settings.agentCli ?? ''}
+          disabled={locked}
+          onChange={(e) => onChange({ agentCli: (e.target.value as AgentCli) || undefined })}
+          data-testid="agent-cli-select"
+        >
+          <option value="">{t('task.settings.agentCliDefault', 'Default (project / user setting)')}</option>
+          {(['claude-code', 'codex', 'opencode', 'gemini', 'goose', 'amp',
+             'cursor', 'copilot', 'pi', 'qwen-code', 'kimi', 'aider'] as const).map((cli) => (
+            <option key={cli} value={cli}>{cli}</option>
+          ))}
+        </select>
       </div>
 
       <hr className={styles.divider} />

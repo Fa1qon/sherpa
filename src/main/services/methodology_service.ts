@@ -60,7 +60,7 @@ export class MethodologyService implements MethodologyPort {
 
   async load(projectPath: string, id: string): Promise<LoadMethodologyResult> {
     const dir = path.join(projectPath, METHODOLOGIES_REL);
-    // Try .yaml first, fall back to .md.
+    // Try exact-name match first (fast path: filename == id).
     const yamlPath = path.join(dir, `${id}.yaml`);
     const mdPath = path.join(dir, `${id}.md`);
     let source: string;
@@ -73,12 +73,46 @@ export class MethodologyService implements MethodologyPort {
         source = await fsp.readFile(mdPath, 'utf8');
         isYaml = false;
       } catch {
-        return { ok: false, error: { kind: 'not-found' } };
+        // Slow-path: filename may differ from id (e.g. feature_dev.yaml has id: feature-dev).
+        // Scan the directory and find the first file whose parsed id matches.
+        const found = await this.findByScanning(dir, id);
+        if (!found) return { ok: false, error: { kind: 'not-found' } };
+        return found.isYaml
+          ? parseMethodologyYaml(found.source, found.filePath)
+          : parseMethodology(found.source, found.filePath);
       }
     }
     return isYaml
       ? parseMethodologyYaml(source, yamlPath)
       : parseMethodology(source, mdPath);
+  }
+
+  private async findByScanning(
+    dir: string,
+    id: string,
+  ): Promise<{ source: string; filePath: string; isYaml: boolean } | null> {
+    let entries: string[];
+    try {
+      entries = await fsp.readdir(dir);
+    } catch {
+      return null;
+    }
+    for (const entry of entries) {
+      const isYaml = entry.endsWith('.yaml');
+      if (!isYaml && !entry.endsWith('.md')) continue;
+      const filePath = path.join(dir, entry);
+      try {
+        const source = await fsp.readFile(filePath, 'utf8');
+        // Cheap id extraction — avoid full parse just to check the id field.
+        const idMatch = source.match(/^id:\s*(.+)$/m);
+        if (idMatch && idMatch[1]!.trim() === id) {
+          return { source, filePath, isYaml };
+        }
+      } catch {
+        // skip unreadable
+      }
+    }
+    return null;
   }
 
   async save(projectPath: string, m: Methodology): Promise<void> {

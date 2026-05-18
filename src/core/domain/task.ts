@@ -1,4 +1,5 @@
 import type { AgentMessage } from './agent';
+import type { AgentCli } from './settings';
 
 /**
  * Permissive trace-event shape mirrored from
@@ -140,6 +141,7 @@ export interface Task {
   readonly tracker_stage_id?: string;
   readonly tracker_fields?: Record<string, unknown>;
   readonly tracker_session_summary?: string;
+  readonly agentCli?: AgentCli;
 }
 
 export function defaultTaskConfig(): TaskExecutionConfig {

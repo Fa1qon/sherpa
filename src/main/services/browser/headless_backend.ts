@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events';
 import type { Browser, Page, BrowserContext } from 'playwright-core';
 import type { BrowserPort, ScreenshotResult } from '../../../core/ports/browser_port';
 import type { BrowserEvent } from '../../../core/domain/browser';
+import { proxyManager } from '../proxy_manager';
 
 export class HeadlessBackend implements BrowserPort {
   private browser: Browser | null = null;
@@ -13,7 +14,19 @@ export class HeadlessBackend implements BrowserPort {
 
   async init(): Promise<void> {
     const { chromium } = await import('playwright-core');
-    this.browser = await chromium.launch({ headless: true });
+    const proxyUrl = proxyManager.getProxyUrl('aiBrowser');
+    const noProxy = proxyManager.getNoProxy('aiBrowser');
+    this.browser = await chromium.launch({
+      headless: true,
+      ...(proxyUrl
+        ? {
+            proxy: {
+              server: proxyUrl,
+              ...(noProxy !== undefined ? { bypass: noProxy } : {}),
+            },
+          }
+        : {}),
+    });
     this.context = await this.browser.newContext();
     this.page = await this.context.newPage();
 

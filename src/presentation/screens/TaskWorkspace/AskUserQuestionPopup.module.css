@@ -2,8 +2,9 @@
   margin: 0 0 8px 0;
   border: 1px solid var(--accent);
   border-radius: 8px;
-  background: var(--bg-panel);
+  background: var(--bg-elevated);
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
 }
 
 .header {
@@ -74,17 +75,17 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  background: var(--bg-default);
+  background: var(--bg-app);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.1s, background 0.1s;
 }
 .option:hover {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, var(--bg-default));
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-app));
 }
 
 .optionOther {

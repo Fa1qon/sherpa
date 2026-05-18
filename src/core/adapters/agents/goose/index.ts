@@ -1,0 +1,1 @@
+export { GooseAdapter } from './adapter';

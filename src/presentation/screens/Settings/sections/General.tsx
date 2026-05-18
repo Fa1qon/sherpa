@@ -14,7 +14,7 @@ export function General(): ReactElement {
       <div style={{ marginTop: 16 }}>
         <label>{t('settings.general.defaultAgentCli')}</label>
         <div role="radiogroup" style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-          {(['claude-code', 'codex', 'opencode'] as const).map((opt) => (
+          {(['claude-code', 'codex', 'opencode', 'gemini', 'goose', 'amp', 'cursor', 'copilot', 'pi', 'qwen-code', 'kimi', 'aider'] as const).map((opt) => (
             <button
               key={opt}
               data-active={cli === opt}

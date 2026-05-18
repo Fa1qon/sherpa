@@ -77,8 +77,10 @@ function AgentTextBubble({ text, initiallyCollapsed }: { text: string; initially
   );
 }
 
-function ToolCallBubble({ toolCall }: { toolCall: ToolCall }): ReactElement {
+function ToolCallBubble({ toolCall }: { toolCall: ToolCall }): ReactElement | null {
   const [expanded, setExpanded] = useState(false);
+  // AskUserQuestion is rendered by AskUserQuestionPopup — skip the tool-call row.
+  if (toolCall.name === 'AskUserQuestion') return null;
   const summary = toolCallSummary(toolCall);
   return (
     <div className={styles.toolCall} data-status={toolCall.status}>

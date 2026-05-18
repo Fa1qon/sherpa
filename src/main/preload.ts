@@ -26,6 +26,7 @@ import type { ArtifactTemplate, CreateTemplateInput } from '../core/domain/artif
 import type { SessionData } from './services/session_store';
 import type { BrowserMode } from '../core/domain/browser';
 import type { BoardConfig, TrackerTask, FieldValue } from '../core/domain/tracker';
+import type { AgentCli } from '../core/domain/settings';
 
 export type { TaskEventPayload };
 
@@ -82,6 +83,7 @@ const sherpa = {
         projectPath?: string;
         autoStart?: boolean;
         compliance_review_enabled?: boolean;
+        strictness_mode?: StrictnessMode;
       },
     ): Promise<Task> => ipcRenderer.invoke(CH.TASK_CREATE, opts),
     // Plan 8b Task 7 — TaskSettingsPanel apply/lock.
@@ -98,6 +100,7 @@ const sherpa = {
         compliance_review_enabled?: boolean;
         strictness_mode?: StrictnessMode;
         ask_before_edit?: boolean;
+        agentCli?: AgentCli;
       },
     ): Promise<Task | null> => ipcRenderer.invoke(CH.TASK_APPLY_SETTINGS, id, settings),
     lockSettings: (id: string): Promise<Task | null> =>
@@ -248,6 +251,20 @@ const sherpa = {
   app: {
     openDevTools: (): void => { ipcRenderer.send('app:open-devtools'); },
   },
+  ubrowser: {
+    show: (x: number, y: number, w: number, h: number, url?: string): Promise<void> =>
+      ipcRenderer.invoke('ubrowser:show', x, y, w, h, url),
+    hide: (): Promise<void> => ipcRenderer.invoke('ubrowser:hide'),
+    navigate: (url: string): Promise<void> => ipcRenderer.invoke('ubrowser:navigate', url),
+    back: (): Promise<void> => ipcRenderer.invoke('ubrowser:back'),
+    forward: (): Promise<void> => ipcRenderer.invoke('ubrowser:forward'),
+    reload: (): Promise<void> => ipcRenderer.invoke('ubrowser:reload'),
+    onUrlChanged: (handler: (url: string, title: string) => void): (() => void) => {
+      const listener = (_e: unknown, url: string, title: string): void => handler(url, title);
+      ipcRenderer.on('ubrowser:url-changed', listener);
+      return () => ipcRenderer.removeListener('ubrowser:url-changed', listener);
+    },
+  },
   browser: {
     open: (taskId: string, mode: BrowserMode) =>
       ipcRenderer.invoke('browser:open', taskId, mode),
@@ -291,6 +308,16 @@ const sherpa = {
   },
   debug: {
     getErrors: (): Promise<unknown[]> => ipcRenderer.invoke(CH.DEBUG_GET_ERRORS),
+  },
+  agent: {
+    storeKey: (agentId: AgentCli, apiKey: string): Promise<{ ok: true } | { ok: false; error: string }> =>
+      ipcRenderer.invoke(CH.AGENT_STORE_KEY, agentId, apiKey),
+    revoke: (agentId: AgentCli): Promise<{ ok: true } | { ok: false; error: string }> =>
+      ipcRenderer.invoke(CH.AGENT_AUTH_REVOKE, agentId),
+    authStatus: (agentId: AgentCli): Promise<{ hasCredential: false } | { hasCredential: true; type: 'apikey' | 'oauth' }> =>
+      ipcRenderer.invoke(CH.AGENT_AUTH_STATUS, agentId),
+    health: (agentId: AgentCli): Promise<{ ok: true } | { ok: false; reason: string }> =>
+      ipcRenderer.invoke(CH.AGENT_HEALTH, agentId),
   },
 };
 

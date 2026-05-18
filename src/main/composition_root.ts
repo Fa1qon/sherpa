@@ -37,6 +37,21 @@ import { BrowserService } from './services/browser_service';
 import { registerBrowserHandlers } from './ipc/browser_handlers';
 import { TrackerService } from './services/tracker_service';
 import { registerTrackerHandlers } from './ipc/tracker_handlers';
+import { proxyManager } from './services/proxy_manager';
+import { AgentRegistry } from './services/agent_registry';
+import { AgentAuthService } from './services/agent_auth_service';
+import { registerAgentHandlers } from './ipc/agent_handlers';
+import { CodexAdapter } from '../core/adapters/agents/codex';
+import { OpenCodeAdapter } from '../core/adapters/agents/opencode';
+import { GeminiAdapter } from '../core/adapters/agents/gemini';
+import { GooseAdapter } from '../core/adapters/agents/goose';
+import { AmpAdapter } from '../core/adapters/agents/amp';
+import { CursorAdapter } from '../core/adapters/agents/cursor';
+import { CopilotAdapter } from '../core/adapters/agents/copilot';
+import { PiAdapter } from '../core/adapters/agents/pi';
+import { QwenCodeAdapter } from '../core/adapters/agents/qwen-code';
+import { KimiAdapter } from '../core/adapters/agents/kimi';
+import { AiderAdapter } from '../core/adapters/agents/aider';
 
 export const PORT = {
   project: token<ProjectPort>('ProjectPort'),
@@ -52,6 +67,8 @@ export const PORT = {
   embeddingService: token<EmbeddingService>('EmbeddingService'),
   browserService: token<BrowserService>('BrowserService'),
   tracker: token<TrackerService>('TrackerService'),
+  agentRegistry: token<AgentRegistry>('AgentRegistry'),
+  agentAuth: token<AgentAuthService>('AgentAuthService'),
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -98,12 +115,53 @@ export function buildContainer(): Container {
   // When SHERPA_STUB_ADAPTER=1, the engine drives against an in-memory
   // adapter that resolves every turn immediately. Absent the env var, the
   // real Claude Code adapter is registered as before.
+  // Lazy proxy env factory for the claudeAgent traffic target.
+  // Called at each spawn so proxy setting changes are picked up immediately
+  // for the next Claude Code turn — no restart required.
+  // Both upper and lower case variants are included so Node.js and libcurl
+  // honour the proxy regardless of which case they inspect.
   const agent: AgentPort = isStubAdapterEnabled()
     ? new StubAgentAdapter()
-    : new ClaudeCodeAdapter();
+    : new ClaudeCodeAdapter({
+        getProxyEnv: () => {
+          const proxyUrl = proxyManager.getProxyUrl('claudeAgent');
+          const noProxy = proxyManager.getNoProxy('claudeAgent');
+          if (!proxyUrl) return {};
+          return {
+            HTTP_PROXY: proxyUrl,
+            HTTPS_PROXY: proxyUrl,
+            ALL_PROXY: proxyUrl,
+            http_proxy: proxyUrl,
+            https_proxy: proxyUrl,
+            all_proxy: proxyUrl,
+            ...(noProxy ? { NO_PROXY: noProxy, no_proxy: noProxy } : {}),
+          };
+        },
+      });
   c.register(PORT.agent, agent);
   const assembler = new SystemPromptAssembler();
-  c.register(PORT.masterChat, new MasterChatController(agent, assembler));
+
+  // Build the registry and register all 12 adapters.
+  const registry = new AgentRegistry();
+  registry.register('claude-code', agent);
+  registry.register('codex', new CodexAdapter());
+  registry.register('opencode', new OpenCodeAdapter());
+  registry.register('gemini', new GeminiAdapter());
+  registry.register('goose', new GooseAdapter());
+  registry.register('amp', new AmpAdapter());
+  registry.register('cursor', new CursorAdapter());
+  registry.register('copilot', new CopilotAdapter());
+  registry.register('pi', new PiAdapter());
+  registry.register('qwen-code', new QwenCodeAdapter());
+  registry.register('kimi', new KimiAdapter());
+  registry.register('aider', new AiderAdapter());
+  c.register(PORT.agentRegistry, registry);
+
+  const authService = new AgentAuthService(c.resolve(PORT.settings));
+  c.register(PORT.agentAuth, authService);
+  registerAgentHandlers(authService, registry);
+
+  c.register(PORT.masterChat, new MasterChatController(registry, assembler));
   c.register(PORT.task, new TaskService());
   c.register(PORT.files, new FilesService());
   c.register(PORT.embeddingService, new EmbeddingService());

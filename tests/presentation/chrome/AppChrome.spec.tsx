@@ -55,8 +55,21 @@ describe('AppChrome', () => {
       </I18nextProvider>,
     );
     fireEvent.click(screen.getByText('Task'));
-    fireEvent.click(screen.getByText('Find task'));
+    // task.newWithMethodology is disabled
+    fireEvent.click(screen.getByText('New task with methodology'));
     expect(onAction).not.toHaveBeenCalled();
+  });
+
+  test('clicking Find task dispatches task.find action', () => {
+    const onAction = vi.fn();
+    render(
+      <I18nextProvider i18n={i18n}>
+        <AppChrome onAction={onAction} />
+      </I18nextProvider>,
+    );
+    fireEvent.click(screen.getByText('Task'));
+    fireEvent.click(screen.getByText('Find task'));
+    expect(onAction).toHaveBeenCalledWith('task.find');
   });
 
   test('⌘W closes the active tab', () => {

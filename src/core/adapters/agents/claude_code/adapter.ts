@@ -49,12 +49,24 @@ export interface ClaudeCodeAdapterOptions {
    * stdout / stderr / stdin / on / kill / exitCode.
    */
   readonly spawnImpl?: typeof spawn;
+  /**
+   * Called at each spawn to get current proxy env vars. Reading at call-time
+   * ensures live updates are picked up — a change to ProxyManager settings
+   * will be reflected in the very next Claude Code turn without a restart.
+   * Intended for proxy routing: the main-layer composition root reads from
+   * ProxyManager and passes HTTP_PROXY / HTTPS_PROXY / NO_PROXY here so the
+   * core adapter stays dependency-free (no main→core import violation).
+   * Both upper and lower case variants are set so Node.js and libcurl honour
+   * the proxy regardless of which case they inspect.
+   */
+  readonly getProxyEnv?: () => Readonly<Record<string, string>>;
 }
 
 export class ClaudeCodeAdapter implements AgentPort {
   readonly providerId = 'claude-code';
   private readonly cliPath: string | null;
   private readonly spawnImpl: typeof spawn;
+  private readonly getProxyEnv: (() => Readonly<Record<string, string>>) | undefined;
 
   constructor(opts: ClaudeCodeAdapterOptions = {}) {
     // If the caller passes `cliPath` explicitly, honour it as-is — an empty
@@ -67,6 +79,7 @@ export class ClaudeCodeAdapter implements AgentPort {
       this.cliPath = resolveClaudeBinary();
     }
     this.spawnImpl = opts.spawnImpl ?? spawn;
+    this.getProxyEnv = opts.getProxyEnv;
   }
 
   async health(): Promise<{ ok: true } | { ok: false; reason: string }> {
@@ -105,7 +118,7 @@ export class ClaudeCodeAdapter implements AgentPort {
 
   async startSession(config: AgentSessionConfig): Promise<AgentSession> {
     if (!this.cliPath) throw new Error('claude CLI not found on PATH');
-    return new ClaudeCodeSession(this.cliPath, config, this.spawnImpl);
+    return new ClaudeCodeSession(this.cliPath, config, this.spawnImpl, this.getProxyEnv);
   }
 }
 
@@ -155,6 +168,7 @@ class ClaudeCodeSession implements AgentSession {
     private readonly cliPath: string,
     private readonly config: AgentSessionConfig,
     private readonly spawnImpl: typeof spawn,
+    private readonly getProxyEnv?: () => Readonly<Record<string, string>>,
   ) {}
 
   onMessage(cb: (m: AgentMessage) => void): () => void {
@@ -198,7 +212,7 @@ class ClaudeCodeSession implements AgentSession {
 
       this.proc = this.spawnImpl(this.cliPath, args, {
         cwd: this.config.spawnCwd ?? this.config.cwd,
-        env: { ...process.env, FORCE_COLOR: '0' },
+        env: { ...process.env, FORCE_COLOR: '0', ...(this.getProxyEnv ? this.getProxyEnv() : {}) },
         stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true,
         shell: useShell,

@@ -86,7 +86,9 @@
     "header": "{{methodology}} — stage {{stage}}",
     "settings": {
       "title_label": "Task title",
-      "title_placeholder": "What are we doing?"
+      "title_placeholder": "What are we doing?",
+      "agentCli": "Agent",
+      "agentCliDefault": "Default (project / user setting)"
     },
     "journal": {
       "title": "Event log",
@@ -256,6 +258,8 @@
       "cost": "Cost tracking",
       "compliance": "Compliance review",
       "advanced": "Advanced",
+      "network": "Network & Proxy",
+      "agents": "Agents",
       "project": "Project",
       "about": "About"
     },
@@ -299,6 +303,45 @@
       "title": "Event log",
       "showToggle": "Show event journal panel"
     },
+    "network": {
+      "title": "Network & Proxy",
+      "proxyServers": "Proxy Servers",
+      "addProxy": "Add Proxy",
+      "noProxies": "No proxy configurations defined.",
+      "entryDialog": {
+        "addTitle": "Add Proxy",
+        "editTitle": "Edit Proxy",
+        "name": "Name",
+        "type": "Type",
+        "host": "Host",
+        "port": "Port",
+        "auth": "Authentication",
+        "username": "Username",
+        "password": "Password",
+        "noProxy": "Bypass (no-proxy)",
+        "noProxyHint": "Comma-separated: localhost,127.0.0.1",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "trafficRouting": "Traffic Routing",
+      "targets": {
+        "claudeAgent": "Claude Code (AI agent)",
+        "userBrowser": "User Browser",
+        "aiBrowser": "AI Browser (headless)",
+        "webSearch": "Web Search"
+      },
+      "direct": "Direct (no proxy)"
+    },
+    "agents": {
+      "description": "Manage API keys and authentication for each AI agent CLI. Credentials are stored in your local user settings.",
+      "statusSet": "Connected ({{type}})",
+      "statusNotSet": "No credential",
+      "noKeyNeeded": "Uses Ollama or local auth — no key needed here",
+      "oauthNote": "OAuth — authenticate via the agent's own CLI",
+      "keyPlaceholder": "Paste API key…",
+      "save": "Save",
+      "revoke": "Revoke"
+    },
     "about": {
       "version": "Version",
       "license": "License"
@@ -329,7 +372,8 @@
     "search": "Search",
     "vcs": "Source Control",
     "extensions": "Extensions",
-    "activeTasks": "{{count}} active"
+    "activeTasks": "{{count}} active",
+    "browser": "Browser"
   },
   "sidebar": {
     "files": "Files",

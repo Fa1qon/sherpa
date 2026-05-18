@@ -36,6 +36,7 @@ export interface CreateTaskOptions {
   readonly economy_mode?: EconomyMode;
   readonly config?: Partial<TaskExecutionConfig>;
   readonly compliance_review_enabled?: boolean;
+  readonly strictness_mode?: StrictnessMode;
   readonly projectPath?: string;
 }
 
@@ -57,6 +58,7 @@ export type ApplySettingsInput = Partial<
     | 'compliance_review_enabled'
     | 'strictness_mode'
     | 'ask_before_edit'
+    | 'agentCli'
   >
 >;
 
@@ -172,7 +174,7 @@ export class TaskService {
       createdAt: now,
       updatedAt: now,
       totalTokens: { input: 0, output: 0 },
-      strictness_mode: 'standard',
+      strictness_mode: opts.strictness_mode ?? 'standard',
       compliance_review_enabled: opts.compliance_review_enabled ?? false,
       settings_locked: false,
     };
@@ -282,6 +284,7 @@ export class TaskService {
       }),
       ...(settings.strictness_mode !== undefined && { strictness_mode: settings.strictness_mode }),
       ...(settings.ask_before_edit !== undefined && { ask_before_edit: settings.ask_before_edit }),
+      ...(settings.agentCli !== undefined && { agentCli: settings.agentCli }),
       updatedAt: new Date().toISOString(),
     };
     this.tasks.set(id, next);

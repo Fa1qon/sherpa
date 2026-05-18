@@ -15,7 +15,7 @@ interface TrackerState {
   addTaskToBoard(projectPath: string, taskId: string, stageId: string): Promise<void>;
 }
 
-export const useTracker = create<TrackerState>((set, get) => ({
+export const useTracker = create<TrackerState>((set, _get) => ({
   boardConfig: null,
   tasks: [],
   loading: false,

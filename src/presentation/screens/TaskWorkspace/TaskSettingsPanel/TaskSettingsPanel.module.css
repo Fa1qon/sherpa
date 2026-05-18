@@ -153,6 +153,19 @@
 }
 .presetBtnActive:hover { background: var(--accent); }
 
+/* ── Inline mode (new-task workspace — fills available space above input) ── */
+.inlinePanel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-default);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* ── Popup mode ── */
 .popup {
   position: absolute;
