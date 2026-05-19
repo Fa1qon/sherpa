@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
 import type { AgentMessage, ToolCall } from '../../../core/domain/agent';
 import { toolCallSummary, ToolCallDetail } from './ToolCallRenderers';
+import { SlotOutlet } from '../../extensions/SlotOutlet';
 import styles from './TaskWorkspace.module.css';
 
 interface Props {
@@ -33,6 +34,10 @@ export function MessageBubble({ message, initiallyCollapsed = false }: Props): R
       ) : (
         <div className={styles.text}>{message.text}</div>
       )}
+      <SlotOutlet
+        slot="chat.decorator"
+        props={{ messageId: message.id, role: message.role }}
+      />
     </div>
   );
 }

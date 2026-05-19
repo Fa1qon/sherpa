@@ -3,9 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { FileViewer } from '../../../src/presentation/fileviewer/FileViewer';
+import { registerDefaultViewers } from '../../../src/presentation/fileviewer/register_default_viewers';
 import { useNavigation } from '../../../src/renderer/store/navigation';
 import { useProject } from '../../../src/renderer/store/project';
 import en from '../../../src/renderer/locales/en.json';
+
+registerDefaultViewers();
 
 vi.mock('@uiw/react-codemirror', () => ({
   default: ({ value }: { value: string }) => <div data-testid="codemirror">{value}</div>,

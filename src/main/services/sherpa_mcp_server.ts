@@ -9,6 +9,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { z } from 'zod';
 import type { BrowserService } from './browser_service';
+import type { BrowserAutomationService } from './browser_automation';
 
 export interface StageCompleteInput {
   readonly summary: string;
@@ -29,9 +30,14 @@ export class SherpaMcpServer {
   private port = 0;
   private readonly sessions = new Map<string, SessionEntry>();
   private browserService?: BrowserService;
+  private browserAutomation?: BrowserAutomationService;
 
   setBrowserService(svc: BrowserService): void {
     this.browserService = svc;
+  }
+
+  setBrowserAutomation(svc: BrowserAutomationService): void {
+    this.browserAutomation = svc;
   }
 
   /** Starts the HTTP server on a random loopback port. Idempotent. */
@@ -130,6 +136,13 @@ export class SherpaMcpServer {
         }
       },
     );
+
+    // ---- User-facing browser tools (registered for every session) ---------
+    // These 12 tools drive the user-visible embedded WebContentsView managed
+    // by UserBrowser, via BrowserAutomationService. They are distinct from the
+    // per-task `browser_*` tools below (which target sandboxed BrowserSession
+    // instances). The `user_browser_` prefix disambiguates them.
+    this.registerUserBrowserTools(mcpServer);
 
     // ---- Browser tools (registered only when taskId is provided) ----------
     if (taskId !== undefined) {
@@ -239,6 +252,165 @@ export class SherpaMcpServer {
     // ---- End browser tools -------------------------------------------------
 
     this.sessions.set(token, { mcpServer, handler, transport: null });
+  }
+
+  /**
+   * Registers the 12 `user_browser_*` MCP tools on the given McpServer. These
+   * drive the user-facing embedded browser tab via BrowserAutomationService.
+   * Each handler guards against the service being unset (e.g., before the
+   * user opens the browser tab).
+   */
+  private registerUserBrowserTools(mcpServer: McpServer): void {
+    const notReady = {
+      content: [{ type: 'text' as const, text: 'Error: BrowserAutomationService not wired. Open the embedded browser tab first.' }],
+    };
+
+    mcpServer.tool(
+      'user_browser_navigate',
+      'Navigate the user-facing embedded browser tab to a URL. This drives the visible browser inside Sherpa UI, not a sandboxed per-task browser.',
+      { url: z.string().url() },
+      async ({ url }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.navigate(url);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_screenshot',
+      'Capture a PNG screenshot of the user-facing embedded browser tab.',
+      { fullPage: z.boolean().optional() },
+      async ({ fullPage }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.screenshot({ fullPage });
+        return { content: [{ type: 'image' as const, data: r.base64, mimeType: 'image/png' as const }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_get_html',
+      'Get the HTML of the user-facing browser page (entire document or just one element by CSS selector).',
+      { selector: z.string().optional() },
+      async ({ selector }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.getHtml(selector);
+        return { content: [{ type: 'text' as const, text: r.html }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_query_selector',
+      'Run a CSS selector and return matched elements (tag, text, attributes, bounding rect). Returns first match unless `all: true`.',
+      { selector: z.string(), all: z.boolean().optional() },
+      async ({ selector, all }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.querySelector(selector, all);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_evaluate_js',
+      'Execute JavaScript in the user-facing browser page. Code runs as the body of an async IIFE; use return to send back a value. Result is JSON-serialized (functions/undefined dropped).',
+      { code: z.string() },
+      async ({ code }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.evaluateJs(code);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_click',
+      'Click an element by CSS selector in the user-facing browser (mouseDown + mouseUp at element center).',
+      { selector: z.string(), button: z.enum(['left', 'right', 'middle']).optional() },
+      async ({ selector, button }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.click(selector, button);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_type',
+      'Focus an input by CSS selector and type characters via simulated keyboard events.',
+      { selector: z.string(), text: z.string(), delay: z.number().int().min(0).max(1000).optional() },
+      async ({ selector, text, delay }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.type(selector, text, delay);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_key',
+      'Send a key down+up event to the user-facing browser (e.g., Enter, Tab, Escape). Optional modifiers: Shift, Control, Alt, Meta.',
+      { key: z.string(), modifiers: z.array(z.string()).optional() },
+      async ({ key, modifiers }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.key(key, modifiers);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_drag',
+      'Drag from one point to another in the user-facing browser (mouseDown → mouseMove*10 → mouseUp).',
+      {
+        from: z.object({ x: z.number(), y: z.number() }),
+        to: z.object({ x: z.number(), y: z.number() }),
+      },
+      async ({ from, to }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = await svc.drag(from, to);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_resize',
+      'Resize the user-facing browser view. (v1 stub — returns requested dimensions; full resize wiring lands in a follow-up.)',
+      { width: z.number().int().positive(), height: z.number().int().positive() },
+      async ({ width, height }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const r = svc.resize(width, height);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_get_console_errors',
+      'Return the buffered console messages from the user-facing browser (last 1000). Optional `sinceMs` filters by ts >= sinceMs.',
+      { sinceMs: z.number().int().nonnegative().optional() },
+      async ({ sinceMs }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const items = svc.getConsoleErrors(sinceMs);
+        return { content: [{ type: 'text' as const, text: JSON.stringify({ items }) }] };
+      },
+    );
+
+    mcpServer.tool(
+      'user_browser_get_network_log',
+      'Return the buffered network requests from the user-facing browser (last 1000). Optional `sinceMs` and `filterMime` (prefix match on Content-Type).',
+      { sinceMs: z.number().int().nonnegative().optional(), filterMime: z.string().optional() },
+      async ({ sinceMs, filterMime }) => {
+        const svc = this.browserAutomation;
+        if (!svc) return notReady;
+        const items = svc.getNetworkLog(sinceMs, filterMime);
+        return { content: [{ type: 'text' as const, text: JSON.stringify({ items }) }] };
+      },
+    );
   }
 
   /** Closes the McpServer for this session and removes it from the registry. */

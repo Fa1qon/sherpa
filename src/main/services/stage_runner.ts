@@ -42,6 +42,8 @@ import {
 } from './gate_evaluator';
 import { parseConditionExpr } from '../../core/domain/condition_expr';
 import { evaluateConditionExpr, type EvaluatorContext } from '../../core/domain/condition_expr_evaluator';
+import type { EventBus } from './event_bus';
+import type { PluginExecutor } from '../plugins/plugin_executor';
 
 // ---------------------------------------------------------------------------
 // Inline ports (filled by later tasks).
@@ -102,6 +104,11 @@ export class StageRunner {
     // (Task 15/16) can call them without changing the runner's surface.
     private readonly _metaStore: MetaMdStore,
     private readonly _artifactStore: ArtifactStore,
+    // Plan 02 — optional EventBus for SDK subscribers (stage.* + gate.*).
+    private readonly bus: EventBus | null = null,
+    // Track C Plan 02 — optional pipeline plugin executor; dispatches
+    // `on_stage_start` / `on_stage_complete` alongside EventBus emits.
+    private readonly pluginExecutor: PluginExecutor | null = null,
   ) {}
 
   async runStage(
@@ -116,6 +123,19 @@ export class StageRunner {
     // tool stream (Plan 8a). Today the runner only emits trace events for
     // stage / preflight / gate transitions — those are the events we forward.
     await this.emitEvent(onEvent, { kind: 'stage_entered', stageId: stage.id, ts: now() });
+    this.bus?.emit({
+      type: 'stage.started',
+      ts: Date.now(),
+      taskId: task.id,
+      stageId: stage.id,
+    });
+    await this.pluginExecutor?.dispatch('on_stage_start', {
+      hook: 'on_stage_start',
+      task: { id: task.id, workdir: projectPath, methodologyId: methodology.id },
+      stage: { id: stage.id },
+      event: {},
+      timestamp: Date.now(),
+    });
 
     // --- Preflight -------------------------------------------------------
     for (const pf of stage.preflight ?? []) {
@@ -168,12 +188,39 @@ export class StageRunner {
           turn: turns,
           evaluation,
         });
+        // Plan 02 — typed gate.evaluated event.
+        if (stage.gate) {
+          this.bus?.emit({
+            type: 'gate.evaluated',
+            ts: Date.now(),
+            taskId: task.id,
+            gateId: stage.id,
+            result:
+              evaluation.kind === 'pass' || evaluation.kind === 'no_gate'
+                ? 'pass'
+                : 'fail',
+          });
+        }
 
         if (evaluation.kind === 'pass' || evaluation.kind === 'no_gate') {
           await this.emitEvent(onEvent, {
             kind: 'stage_completed',
             stageId: stage.id,
             turns,
+          });
+          this.bus?.emit({
+            type: 'stage.completed',
+            ts: Date.now(),
+            taskId: task.id,
+            stageId: stage.id,
+            status: 'success',
+          });
+          await this.pluginExecutor?.dispatch('on_stage_complete', {
+            hook: 'on_stage_complete',
+            task: { id: task.id, workdir: projectPath, methodologyId: methodology.id },
+            stage: { id: stage.id, status: 'success' },
+            event: {},
+            timestamp: Date.now(),
           });
           return { kind: 'completed', stageId: stage.id, turns };
         }
@@ -182,6 +229,20 @@ export class StageRunner {
         const next = this.handleBlock(evaluation, stage, strictness);
         if (next.kind === 'done') {
           await this.emitEvent(onEvent, { kind: 'stage_completed', stageId: stage.id, turns });
+          this.bus?.emit({
+            type: 'stage.completed',
+            ts: Date.now(),
+            taskId: task.id,
+            stageId: stage.id,
+            status: 'success',
+          });
+          await this.pluginExecutor?.dispatch('on_stage_complete', {
+            hook: 'on_stage_complete',
+            task: { id: task.id, workdir: projectPath, methodologyId: methodology.id },
+            stage: { id: stage.id, status: 'success' },
+            event: {},
+            timestamp: Date.now(),
+          });
           return { kind: 'completed', stageId: stage.id, turns };
         }
         if (next.kind === 'rollback') {
@@ -200,6 +261,20 @@ export class StageRunner {
             reason: next.reason,
             turns,
           });
+          this.bus?.emit({
+            type: 'stage.completed',
+            ts: Date.now(),
+            taskId: task.id,
+            stageId: stage.id,
+            status: 'failed',
+          });
+          await this.pluginExecutor?.dispatch('on_stage_complete', {
+            hook: 'on_stage_complete',
+            task: { id: task.id, workdir: projectPath, methodologyId: methodology.id },
+            stage: { id: stage.id, status: 'failed' },
+            event: { reason: next.reason },
+            timestamp: Date.now(),
+          });
           return { kind: 'failed', reason: next.reason };
         }
         // continue
@@ -215,6 +290,20 @@ export class StageRunner {
       stageId: stage.id,
       reason: 'max turns exceeded',
       turns,
+    });
+    this.bus?.emit({
+      type: 'stage.completed',
+      ts: Date.now(),
+      taskId: task.id,
+      stageId: stage.id,
+      status: 'failed',
+    });
+    await this.pluginExecutor?.dispatch('on_stage_complete', {
+      hook: 'on_stage_complete',
+      task: { id: task.id, workdir: projectPath, methodologyId: methodology.id },
+      stage: { id: stage.id, status: 'failed' },
+      event: { reason: 'max turns exceeded' },
+      timestamp: Date.now(),
     });
     return { kind: 'failed', reason: 'max turns exceeded' };
   }

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type TabKind = 'task' | 'methodology-editor' | 'settings' | 'project-settings' | 'file' | 'tracker' | 'browser';
+export type TabKind = 'task' | 'methodology-editor' | 'settings' | 'project-settings' | 'file' | 'tracker' | 'browser' | 'analytics';
 
 export interface Tab {
   readonly id: string;

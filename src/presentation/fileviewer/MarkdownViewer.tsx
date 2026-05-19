@@ -1,5 +1,5 @@
 // src/presentation/fileviewer/MarkdownViewer.tsx
-import { useState, useCallback, type ReactElement } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState, useCallback, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -7,24 +7,44 @@ import CodeMirror from '@uiw/react-codemirror';
 import { markdown as mdLang } from '@codemirror/lang-markdown';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../renderer/store/settings';
+import { setMermaidTheme } from './mermaid/mermaid_loader';
+import { isMindmapDoc, parseFrontmatter } from './markmap/frontmatter';
+import type { ViewerProps } from './viewer_registry';
+import { toSherpaFileUrl } from '../../renderer/util/sherpa_file_url';
 import styles from './MarkdownViewer.module.css';
 
-interface Props {
-  content: string;
-  projectPath: string;
-  relPath: string;
-  onSave(content: string): Promise<void>;
-}
+const LazyMermaidBlock = lazy(async () => {
+  const mod = await import('./mermaid/MermaidBlock');
+  return { default: mod.MermaidBlock };
+});
+
+const LazyMarkmapBlock = lazy(async () => {
+  const mod = await import('./markmap/MarkmapBlock');
+  return { default: mod.MarkmapBlock };
+});
+
+const LazyShikiCode = lazy(async () => {
+  const mod = await import('./markdown/ShikiCode');
+  return { default: mod.ShikiCode };
+});
+
+const MERMAID_LANGS = new Set([
+  'mermaid', 'c4', 'sequence', 'dataflow', 'gantt', 'state', 'mindmap',
+]);
 
 type Mode = 'view' | 'edit';
 
-export function MarkdownViewer({ content, onSave }: Props): ReactElement {
+export function MarkdownViewer({ content, relPath, onSave }: ViewerProps): ReactElement {
   const { t } = useTranslation();
   const theme = useSettings((s) => s.user.theme);
   const cmTheme = theme === 'light' ? 'light' : 'dark';
   const [mode, setMode] = useState<Mode>('view');
   const [draft, setDraft] = useState(content);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setMermaidTheme(theme === 'light' ? 'light' : 'dark');
+  }, [theme]);
 
   const enterEdit = (): void => {
     setDraft(content);
@@ -36,7 +56,55 @@ export function MarkdownViewer({ content, onSave }: Props): ReactElement {
     setMode('view');
   };
 
+  const isMindmap = useMemo(() => isMindmapDoc(content), [content]);
+  const mindmapBody = useMemo(() => parseFrontmatter(content).body, [content]);
+
+  const mdComponents = useMemo<ComponentProps<typeof ReactMarkdown>['components']>(() => ({
+    code(props) {
+      const { className, children, ...rest } = props as { className?: string; children?: ReactNode };
+      const lang = /language-(\w+)/.exec(className ?? '')?.[1];
+      if (lang && MERMAID_LANGS.has(lang)) {
+        const src = String(children).replace(/\n$/, '');
+        return (
+          <Suspense fallback={<pre>{src}</pre>}>
+            <LazyMermaidBlock source={src} />
+          </Suspense>
+        );
+      }
+      if (lang === 'markmap') {
+        const src = String(children).replace(/\n$/, '');
+        return (
+          <Suspense fallback={<pre>{src}</pre>}>
+            <LazyMarkmapBlock source={src} />
+          </Suspense>
+        );
+      }
+      if (lang) {
+        const src = String(children).replace(/\n$/, '');
+        return (
+          <Suspense fallback={<pre><code>{src}</code></pre>}>
+            <LazyShikiCode lang={lang} code={src} theme={theme === 'light' ? 'light' : 'dark'} />
+          </Suspense>
+        );
+      }
+      return <code className={className} {...rest}>{children}</code>;
+    },
+    img(props) {
+      const { src, alt, ...rest } = props as { src?: unknown; alt?: string };
+      const resolved = typeof src === 'string' ? (toSherpaFileUrl(src, relPath) ?? src) : src;
+      return (
+        <img
+          {...(rest as Record<string, unknown>)}
+          src={typeof resolved === 'string' ? resolved : undefined}
+          alt={alt ?? ''}
+          style={{ maxWidth: '100%', height: 'auto' }}
+        />
+      );
+    },
+  }), [relPath, theme]);
+
   const save = useCallback(async (): Promise<void> => {
+    if (!onSave) return;
     setSaving(true);
     try {
       await onSave(draft);
@@ -80,11 +148,19 @@ export function MarkdownViewer({ content, onSave }: Props): ReactElement {
       </div>
 
       {mode === 'view' ? (
-        <div className={styles.mdContent}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-            {content}
-          </ReactMarkdown>
-        </div>
+        isMindmap ? (
+          <div className={styles.mdContent}>
+            <Suspense fallback={<div>{t('markmap.loading', 'Loading…')}</div>}>
+              <LazyMarkmapBlock source={mindmapBody} />
+            </Suspense>
+          </div>
+        ) : (
+          <div className={styles.mdContent}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={mdComponents}>
+              {content}
+            </ReactMarkdown>
+          </div>
+        )
       ) : (
         <div className={styles.editorWrap}>
           <CodeMirror

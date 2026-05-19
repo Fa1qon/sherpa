@@ -12,6 +12,7 @@ import { Reviewers } from './tabs/Reviewers';
 import { GateTab } from './tabs/Gate';
 import { Phases } from './tabs/Phases';
 import { Stuck } from './tabs/Stuck';
+import { SlotOutlet } from '../../../extensions/SlotOutlet';
 import styles from './StageForm.module.css';
 
 interface Props {
@@ -86,6 +87,11 @@ export function StageForm({ draft, stageId, onChange }: Props): ReactElement | n
             content: <Stuck stage={stage} onUpdate={update} />,
           },
         ]}
+      />
+      <SlotOutlet
+        slot="methodology.editor.stage.tab"
+        layout="stack"
+        props={{ stageId: stage.id }}
       />
     </form>
   );

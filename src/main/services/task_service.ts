@@ -22,6 +22,7 @@ import type {
 import { defaultTaskConfig } from '../../core/domain/task';
 import type { AgentMessage } from '../../core/domain/agent';
 import type { ProjectDatabase } from '../../core/adapters/project_database';
+import type { EventBus } from './event_bus';
 
 export interface CreateTaskOptions {
   /** Plan 8b Task 7 — human title. Required from the UI, optional on the wire. */
@@ -66,6 +67,11 @@ export class TaskService {
   private readonly tasks = new Map<string, Task>();
   private db: ReturnType<ProjectDatabase['raw']> | null = null;
   private sherpaN = 0;
+
+  // Optional EventBus — Plan 02 (Extension Framework) emits task.created /
+  // task.completed for SDK subscribers. Defaults to null so existing tests
+  // continue to construct via `new TaskService()`.
+  constructor(private readonly bus: EventBus | null = null) {}
 
   /**
    * Inject a ProjectDatabase after construction (called from IPC handler when
@@ -180,6 +186,13 @@ export class TaskService {
     };
     this.tasks.set(task.id, task);
     this.persist(task);
+    // Plan 02 — broadcast typed event to SDK subscribers.
+    this.bus?.emit({
+      type: 'task.created',
+      ts: Date.now(),
+      taskId: task.id,
+      methodology: task.methodologyId,
+    });
     return task;
   }
 

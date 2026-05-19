@@ -1,0 +1,154 @@
+.wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+  background: var(--bg-app);
+  color: var(--fg-default);
+}
+
+.notebook {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cellMarkdown {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cellMarkdown h1, .cellMarkdown h2, .cellMarkdown h3 {
+  margin-top: 0;
+  color: var(--fg-default);
+}
+
+.cellRaw {
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--fg-default);
+}
+
+.cellCode {
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  overflow: hidden;
+}
+
+.codeRow {
+  display: flex;
+  align-items: flex-start;
+}
+
+.execCount {
+  flex: 0 0 56px;
+  padding: 12px 8px 12px 12px;
+  text-align: right;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--fg-muted);
+  user-select: none;
+}
+
+.codeBody {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.codeBody > * { margin: 0 !important; }
+
+.codeFallback {
+  margin: 0;
+  padding: 12px;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  background: transparent;
+  overflow: auto;
+}
+
+.outputs {
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-app);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.streamOut, .streamErr, .htmlFallback {
+  margin: 0;
+  padding: 6px 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 3px;
+  color: var(--fg-default);
+}
+
+.streamErr {
+  background: rgba(255, 69, 58, 0.08);
+  color: var(--error);
+}
+
+.htmlFallback {
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border-default);
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 3px;
+}
+
+.imageWrap {
+  display: block;
+  max-width: 100%;
+  overflow: auto;
+}
+
+.imageWrap svg { max-width: 100%; height: auto; }
+
+.mdOutput {
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--fg-default);
+}
+
+.error {
+  padding: 12px 16px;
+  margin: 12px;
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  background: rgba(231, 76, 60, 0.08);
+  color: var(--fg-default);
+}
+
+.errorTitle {
+  color: var(--error);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.errorBody {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+}

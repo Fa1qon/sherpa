@@ -16,7 +16,8 @@ const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', '
 const CSV_EXTS = new Set(['csv', 'tsv']);
 const MD_EXTS = new Set(['md', 'mdx']);
 const TEXT_EXTS = new Set(['txt', 'log', 'gitignore', 'gitattributes', 'editorconfig', 'npmrc', 'prettierignore', 'eslintignore']);
-const BINARY_EXTS = new Set(['pdf', 'zip', 'tar', 'gz', 'mp3', 'mp4', 'avi', 'mov', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'exe', 'dll', 'so', 'dylib']);
+// 'pdf' intentionally excluded: viewable via PdfViewer (Chromium PDFium native view).
+const BINARY_EXTS = new Set(['zip', 'tar', 'gz', 'mp3', 'mp4', 'avi', 'mov', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'exe', 'dll', 'so', 'dylib']);
 
 export function getFileType(ext: string): FileType {
   const e = ext.toLowerCase();

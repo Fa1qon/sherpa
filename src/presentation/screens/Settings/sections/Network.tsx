@@ -14,12 +14,35 @@ type DialogState =
 
 export function Network(): ReactElement {
   const { t } = useTranslation();
-  const entries = useSettings((s) => s.user.proxyEntries ?? []);
-  const assignments = useSettings((s) => s.user.proxyAssignments ?? DEFAULT_PROXY_ASSIGNMENTS);
+  const rawEntries = useSettings((s) => s.user.proxyEntries);
+  const entries = rawEntries ?? [];
+  const rawAssignments = useSettings((s) => s.user.proxyAssignments);
+  const assignments = rawAssignments ?? DEFAULT_PROXY_ASSIGNMENTS;
   const updateProxyEntries = useSettings((s) => s.updateProxyEntries);
   const updateProxyAssignments = useSettings((s) => s.updateProxyAssignments);
+  const inboundTriggerPort = useSettings((s) => s.user.inboundTriggerPort);
+  const setInboundTriggerPort = useSettings((s) => s.setInboundTriggerPort);
 
   const [dialog, setDialog] = useState<DialogState>({ open: false });
+  const [portInput, setPortInput] = useState<string>(
+    inboundTriggerPort === undefined ? '19222' : String(inboundTriggerPort),
+  );
+
+  const handlePortBlur = (): void => {
+    const trimmed = portInput.trim();
+    if (trimmed === '') {
+      void setInboundTriggerPort(undefined);
+      setPortInput('19222');
+      return;
+    }
+    const n = Number.parseInt(trimmed, 10);
+    if (!Number.isFinite(n) || n < 0 || n > 65535 || (n !== 0 && n < 1024)) {
+      // Reset to current valid value on invalid input.
+      setPortInput(inboundTriggerPort === undefined ? '19222' : String(inboundTriggerPort));
+      return;
+    }
+    void setInboundTriggerPort(n);
+  };
 
   const handleSaveEntry = (entry: ProxyEntry): void => {
     const existing = entries.findIndex((e) => e.id === entry.id);
@@ -116,6 +139,29 @@ export function Network(): ReactElement {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Inbound trigger port (Track C Plan 04) */}
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <span className={styles.cardTitle}>{t('settings.network.inboundTriggerPort')}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="number"
+            min={0}
+            max={65535}
+            step={1}
+            value={portInput}
+            onChange={(e) => setPortInput(e.target.value)}
+            onBlur={handlePortBlur}
+            data-testid="inbound-trigger-port-input"
+            style={{ width: 120 }}
+          />
+          <span style={{ opacity: 0.7, fontSize: '0.85em' }}>
+            {t('settings.network.inboundTriggerPortHint')}
+          </span>
+        </div>
       </div>
 
       {dialog.open && (

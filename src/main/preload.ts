@@ -27,6 +27,16 @@ import type { SessionData } from './services/session_store';
 import type { BrowserMode } from '../core/domain/browser';
 import type { BoardConfig, TrackerTask, FieldValue } from '../core/domain/tracker';
 import type { AgentCli } from '../core/domain/settings';
+import type { QueryItem } from './services/browser_automation';
+import type { ConsoleEntry } from './services/console_capture';
+import type { NetworkEntry } from './services/network_capture';
+import type {
+  StageDurationEntry,
+  GateOutcomeEntry,
+  ToolUsageEntry,
+} from './observability/aggregator_types';
+import type { McpServerConfig } from '../core/domain/mcp_server';
+import type { McpPingResult } from './ipc/mcp_handlers';
 
 export type { TaskEventPayload };
 
@@ -247,11 +257,63 @@ const sherpa = {
       ipcRenderer.on(CH.APP_EVENT, wrapped);
       return () => ipcRenderer.removeListener(CH.APP_EVENT, wrapped);
     },
+    // Plan 02 (Extension Framework) — typed AppEvent subscription.
+    //
+    // The new EventBus broadcasts single-arg payloads:
+    //   `w.webContents.send(CH.APP_EVENT, ev)`
+    // The legacy `setupIpcEventBridge` keeps the two-arg shape
+    //   `w.webContents.send(CH.APP_EVENT, eventName, payload)`
+    // for backwards compatibility. We disambiguate here by inspecting
+    // the FIRST argument after the IpcRendererEvent: when it is an
+    // object with a `.type` string, treat it as the Plan 02 single-arg
+    // payload; otherwise it's the legacy two-arg shape and we ignore it.
+    on: (type: string, cb: (ev: unknown) => void): (() => void) => {
+      const wrapped = (_e: unknown, first: unknown): void => {
+        if (typeof first !== 'object' || first === null) return;
+        const ev = first as { type?: unknown };
+        if (typeof ev.type !== 'string') return;
+        if (type === '*' || ev.type === type) cb(first);
+      };
+      ipcRenderer.on(CH.APP_EVENT, wrapped);
+      return () => ipcRenderer.removeListener(CH.APP_EVENT, wrapped);
+    },
   },
   app: {
     openDevTools: (): void => { ipcRenderer.send('app:open-devtools'); },
   },
+  browserTools: {
+    navigate: (url: string): Promise<{ ok: boolean; finalUrl: string }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_NAVIGATE, url),
+    screenshot: (opts?: { fullPage?: boolean }): Promise<{ base64: string; width: number; height: number }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_SCREENSHOT, opts),
+    getHtml: (selector?: string): Promise<{ html: string }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_GET_HTML, selector),
+    querySelector: (selector: string, all?: boolean): Promise<{ count: number; items: QueryItem[] }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_QUERY_SELECTOR, selector, all),
+    evaluateJs: (code: string): Promise<{ result?: unknown; error?: string }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_EVALUATE_JS, code),
+    click: (selector: string, button?: 'left' | 'right' | 'middle'): Promise<{ ok: boolean }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_CLICK, selector, button),
+    type: (selector: string, text: string, delay?: number): Promise<{ ok: boolean }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_TYPE, selector, text, delay),
+    key: (key: string, modifiers?: string[]): Promise<{ ok: boolean }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_KEY, key, modifiers),
+    drag: (from: { x: number; y: number }, to: { x: number; y: number }): Promise<{ ok: boolean }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_DRAG, from, to),
+    resize: (width: number, height: number): Promise<{ ok: boolean; actual: { width: number; height: number } }> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_RESIZE, width, height),
+    consoleErrors: (sinceMs?: number): Promise<ConsoleEntry[]> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_CONSOLE_ERRORS, sinceMs),
+    networkLog: (sinceMs?: number, filterMime?: string): Promise<NetworkEntry[]> =>
+      ipcRenderer.invoke(CH.BROWSER_TOOL_NETWORK_LOG, sinceMs, filterMime),
+  },
   ubrowser: {
+    // NEW: register/unregister the renderer-owned <webview>'s webContents
+    // id so main can route navigation + MCP automation through it.
+    registerWebContentsId: (id: number | null): Promise<void> =>
+      ipcRenderer.invoke('ubrowser:attach', id),
+    // Legacy methods kept for back-compat with any caller still routing
+    // through main. The new BrowserTab calls webview methods directly.
     show: (x: number, y: number, w: number, h: number, url?: string): Promise<void> =>
       ipcRenderer.invoke('ubrowser:show', x, y, w, h, url),
     hide: (): Promise<void> => ipcRenderer.invoke('ubrowser:hide'),
@@ -318,6 +380,66 @@ const sherpa = {
       ipcRenderer.invoke(CH.AGENT_AUTH_STATUS, agentId),
     health: (agentId: AgentCli): Promise<{ ok: true } | { ok: false; reason: string }> =>
       ipcRenderer.invoke(CH.AGENT_HEALTH, agentId),
+  },
+  observability: {
+    // Track E Plan 01 — aggregated stage/tool/gate metrics.
+    stageDurations: (): Promise<StageDurationEntry[]> =>
+      ipcRenderer.invoke(CH.OBSERV_STAGE_DURATIONS),
+    gateOutcomes: (): Promise<GateOutcomeEntry[]> =>
+      ipcRenderer.invoke(CH.OBSERV_GATE_OUTCOMES),
+    toolUsage: (): Promise<ToolUsageEntry[]> =>
+      ipcRenderer.invoke(CH.OBSERV_TOOL_USAGE),
+  },
+  mobileWeb: {
+    status: (): Promise<{ running: boolean; port?: number; lanIp?: string }> =>
+      ipcRenderer.invoke(CH.MOBILE_WEB_STATUS),
+    setPin: (pin: string): Promise<{ ok: true } | { ok: false; error: string }> =>
+      ipcRenderer.invoke(CH.MOBILE_WEB_SET_PIN, pin),
+    restart: (): Promise<{ ok: true } | { ok: false; error: string }> =>
+      ipcRenderer.invoke(CH.MOBILE_WEB_RESTART),
+  },
+  // Track C Plan 03 — test-ping a configured MCP server. Returns the
+  // connected tools or a single error string. Fully stateless: the main
+  // process closes the connection after the ping.
+  mcp: {
+    ping: (cfg: McpServerConfig): Promise<McpPingResult> =>
+      ipcRenderer.invoke(CH.MCP_PING, cfg),
+  },
+  // Extension Framework Plan 03 Task 7 — per-extension key/value storage.
+  // Main-side handler validates `extId` against the loaded-extensions
+  // allow-list before reading/writing.
+  extension: {
+    storage: {
+      get: (extId: string, key: string): Promise<unknown> =>
+        ipcRenderer.invoke(CH.EXTENSION_STORAGE_GET, extId, key),
+      set: (extId: string, key: string, val: unknown): Promise<void> =>
+        ipcRenderer.invoke(CH.EXTENSION_STORAGE_SET, extId, key, val),
+      delete: (extId: string, key: string): Promise<void> =>
+        ipcRenderer.invoke(CH.EXTENSION_STORAGE_DELETE, extId, key),
+    },
+  },
+  // Extension Framework Plan 05 — Extension Manager UI.
+  extensions: {
+    list: (): Promise<unknown[]> => ipcRenderer.invoke(CH.EXTENSION_LIST),
+    enable: (id: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke(CH.EXTENSION_ENABLE, id),
+    disable: (id: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke(CH.EXTENSION_DISABLE, id),
+    installZip: (
+      zipPath: string,
+    ): Promise<{ ok: boolean; extensionId?: string; errors?: string[] }> =>
+      ipcRenderer.invoke(CH.EXTENSION_INSTALL_ZIP, zipPath),
+    installDir: (
+      sourceDir: string,
+    ): Promise<{ ok: boolean; extensionId?: string; errors?: string[] }> =>
+      ipcRenderer.invoke(CH.EXTENSION_INSTALL_DIR, sourceDir),
+    uninstall: (id: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke(CH.EXTENSION_UNINSTALL, id),
+    getSettings: (id: string): Promise<Record<string, unknown>> =>
+      ipcRenderer.invoke(CH.EXTENSION_GET_SETTINGS, id),
+    setSettings: (id: string, settings: Record<string, unknown>): Promise<{ ok: true }> =>
+      ipcRenderer.invoke(CH.EXTENSION_SET_SETTINGS, id, settings),
+    pickZip: (): Promise<string | null> => ipcRenderer.invoke(CH.EXTENSION_PICK_ZIP),
   },
 };
 

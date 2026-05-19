@@ -53,6 +53,8 @@ describe('SettingsService', () => {
       costTracking: { showCost: true, pricePerMillionInputTokens: 3.0, pricePerMillionOutputTokens: 15.0 },
       complianceOutputMode: 'both',
       showEventLog: true,
+      // Track C Plan 04 — default merged in from defaultUserSettings().
+      inboundTriggerPort: 19222,
     });
   });
 

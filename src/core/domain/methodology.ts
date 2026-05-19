@@ -3,6 +3,8 @@
 // in src/core/methodology/* translate to/from .md.
 
 import type { TaskComplexity } from './task';
+import type { PipelinePlugin } from './pipeline_plugin';
+import type { InboundTriggerConfig } from './inbound_trigger';
 
 export type StageMode = 'auto' | 'interactive' | 'gate';
 
@@ -250,6 +252,7 @@ export interface Methodology {
   readonly anti_patterns?: readonly string[];
   readonly state_schema?: readonly StateFlag[];
   readonly modes?: readonly MethodologyMode[];
+  readonly plugins?: readonly PipelinePlugin[];
 }
 
 /**
@@ -292,7 +295,7 @@ export interface ApplicabilityRule {
   readonly weight?: number;
 }
 
-export type GateKind = 'standard' | 'comprehension';
+export type GateKind = 'standard' | 'comprehension' | 'external';
 
 export type GateItemKind =
   | 'artifact_written'
@@ -315,6 +318,12 @@ export interface GateItem {
 export interface Gate {
   readonly kind: GateKind;
   readonly items: readonly GateItem[];
+  // Track C Plan 04 — external gate fields. Present only when kind === 'external';
+  // ignored for 'standard' / 'comprehension'. Kept optional on the same shape
+  // (rather than a discriminated union) to minimise churn for existing call sites.
+  readonly trigger?: InboundTriggerConfig;
+  readonly timeoutMs?: number;
+  readonly onTimeout?: 'fail' | 'continue' | 'retry';
 }
 
 export type ExecutionIsolation = 'inline' | 'subagent' | 'parallel_subagents';
@@ -481,5 +490,6 @@ export function isMethodology(value: unknown): value is Methodology {
   if (typeof v.description !== 'string') return false;
   if (!Array.isArray(v.stages)) return false;
   if (!Array.isArray(v.edges)) return false;
+  if (!(v.plugins === undefined || Array.isArray(v.plugins))) return false;
   return v.stages.every(isStage) && v.edges.every(isEdge);
 }

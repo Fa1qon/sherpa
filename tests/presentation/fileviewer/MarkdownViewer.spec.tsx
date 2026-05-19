@@ -21,18 +21,18 @@ beforeEach(() => vi.clearAllMocks());
 
 describe('MarkdownViewer', () => {
   test('renders markdown in view mode by default', () => {
-    render(wrap(<MarkdownViewer content="# Hello" projectPath="/p" relPath="README.md" onSave={onSave} />));
+    render(wrap(<MarkdownViewer content="# Hello" ext="md" projectPath="/p" relPath="README.md" onSave={onSave} />));
     expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
   });
 
   test('switches to edit mode on Edit button click', () => {
-    render(wrap(<MarkdownViewer content="# Hello" projectPath="/p" relPath="README.md" onSave={onSave} />));
+    render(wrap(<MarkdownViewer content="# Hello" ext="md" projectPath="/p" relPath="README.md" onSave={onSave} />));
     fireEvent.click(screen.getByRole('button', { name: /edit|редакт/i }));
     expect(screen.getByTestId('codemirror')).toBeTruthy();
   });
 
   test('Save button calls onSave with edited content', () => {
-    render(wrap(<MarkdownViewer content="original" projectPath="/p" relPath="README.md" onSave={onSave} />));
+    render(wrap(<MarkdownViewer content="original" ext="md" projectPath="/p" relPath="README.md" onSave={onSave} />));
     fireEvent.click(screen.getByRole('button', { name: /edit|редакт/i }));
     fireEvent.change(screen.getByTestId('codemirror'), { target: { value: 'modified' } });
     fireEvent.click(screen.getByRole('button', { name: /save|сохран/i }));
@@ -40,10 +40,40 @@ describe('MarkdownViewer', () => {
   });
 
   test('Cancel in edit mode returns to view mode without saving', () => {
-    render(wrap(<MarkdownViewer content="# Hello" projectPath="/p" relPath="README.md" onSave={onSave} />));
+    render(wrap(<MarkdownViewer content="# Hello" ext="md" projectPath="/p" relPath="README.md" onSave={onSave} />));
     fireEvent.click(screen.getByRole('button', { name: /edit|редакт/i }));
     fireEvent.click(screen.getByRole('button', { name: /cancel|отмен/i }));
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
+  });
+
+  test('rewrites relative image src via sherpa-file:// protocol', () => {
+    const { container } = render(wrap(
+      <MarkdownViewer
+        content="![alt](./img.png)"
+        ext="md"
+        projectPath="/p"
+        relPath="docs/spec.md"
+        onSave={onSave}
+      />,
+    ));
+    const img = container.querySelector('img');
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute('src')).toBe('sherpa-file://current/docs/img.png');
+  });
+
+  test('leaves absolute http(s) image src unchanged', () => {
+    const { container } = render(wrap(
+      <MarkdownViewer
+        content="![alt](https://example.com/x.png)"
+        ext="md"
+        projectPath="/p"
+        relPath="docs/spec.md"
+        onSave={onSave}
+      />,
+    ));
+    const img = container.querySelector('img');
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute('src')).toBe('https://example.com/x.png');
   });
 });

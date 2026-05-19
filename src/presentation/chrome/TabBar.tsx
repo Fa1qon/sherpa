@@ -19,6 +19,7 @@ const TITLE_KEY: Record<TabKind, string> = {
   file: 'tabs.file',
   tracker: 'tabs.tracker',
   browser: 'activityBar.browser',
+  analytics: 'activityBar.analytics',
 };
 
 export interface TabBarProps {

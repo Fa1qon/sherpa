@@ -43,6 +43,8 @@ import type {
   ArtifactSpec,
   ConditionalPath,
 } from '../../core/domain/methodology';
+import type { EventBus } from './event_bus';
+import type { PluginExecutor } from '../plugins/plugin_executor';
 
 // ---------------------------------------------------------------------------
 // Public surface
@@ -95,6 +97,10 @@ export interface ArtifactStoreOptions {
    * Default: false (fsync on).
    */
   readonly noFsync?: boolean;
+  /** Plan 02 — optional EventBus for artifact.written events. */
+  readonly bus?: EventBus | null;
+  /** Track C Plan 02 — optional pipeline plugin executor. */
+  readonly pluginExecutor?: PluginExecutor | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -104,10 +110,14 @@ export interface ArtifactStoreOptions {
 export class ArtifactStoreImpl {
   private readonly logger: WarnLogger;
   private readonly noFsync: boolean;
+  private readonly bus: EventBus | null;
+  private readonly pluginExecutor: PluginExecutor | null;
 
   constructor(opts: ArtifactStoreOptions = {}) {
     this.logger = opts.logger ?? defaultWarnLogger;
     this.noFsync = opts.noFsync ?? false;
+    this.bus = opts.bus ?? null;
+    this.pluginExecutor = opts.pluginExecutor ?? null;
   }
 
   /**
@@ -170,6 +180,26 @@ export class ArtifactStoreImpl {
 
     await fsp.mkdir(path.dirname(targetAbs), { recursive: true });
     await atomicWrite(targetAbs, finalContent, { fsync: !this.noFsync });
+
+    // Plan 02 — typed artifact.written event. Size is byte length of the
+    // final content (post-invariant rewrite, post-frontmatter merge).
+    const finalSize = Buffer.byteLength(finalContent, 'utf8');
+    this.bus?.emit({
+      type: 'artifact.written',
+      ts: Date.now(),
+      taskId: ctx.taskId,
+      artifactPath: targetAbs,
+      size: finalSize,
+    });
+
+    // Track C Plan 02 — plugin dispatch on artifact creation.
+    await this.pluginExecutor?.dispatch('on_artifact_created', {
+      hook: 'on_artifact_created',
+      task: { id: ctx.taskId, workdir: ctx.projectPath },
+      artifact: { path: targetAbs, size: finalSize },
+      event: {},
+      timestamp: Date.now(),
+    });
 
     return { path: targetAbs };
   }

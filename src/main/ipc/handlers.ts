@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import type { Container } from '../container';
 import { PORT } from '../composition_root';
 import { CH } from './channels';
+import type { EventAggregator } from '../observability/event_aggregator';
 import type { AddProjectOptions } from '../../core/ports/project_port';
 import type { UserSettings, ProjectSettings } from '../../core/domain/settings';
 import type {
@@ -48,7 +49,12 @@ import {
 } from '../services/context_compressor';
 import { proxyManager } from '../services/proxy_manager';
 import { userBrowser } from '../services/user_browser';
+import { ConsoleCapture } from '../services/console_capture';
+import { NetworkCapture } from '../services/network_capture';
+import { BrowserAutomationService } from '../services/browser_automation';
+import { registerBrowserAutomationHandlers } from './browser_automation_handlers';
 import { DEFAULT_PROXY_ASSIGNMENTS } from '../../core/domain/proxy';
+import { setCurrentProjectPath } from '../protocols/sherpa_file_protocol';
 
 /** Optional low-level overrides for testability. */
 export interface IpcHandlerDeps {
@@ -163,6 +169,7 @@ export function registerIpcHandlers(
   container: Container,
   ipcMainOverride?: Pick<IpcMain, 'handle'>,
   deps: IpcHandlerDeps = {},
+  aggregatorOverride?: EventAggregator | null,
 ): void {
   initDebugErrorCapture();
 
@@ -202,6 +209,24 @@ export function registerIpcHandlers(
     sherpaMcpServer.setBrowserService(browserSvc);
   } catch { /* BrowserService unavailable in test environment */ }
 
+  // Wire BrowserAutomationService — provides the 12 user_browser_* MCP tools
+  // and IPC channels with a backing service. ConsoleCapture and NetworkCapture
+  // attach to the embedded UserBrowser's WebContents once it's lazily created
+  // on first show() (via the onViewCreated hook).
+  try {
+    const consoleCap = new ConsoleCapture();
+    const networkCap = new NetworkCapture();
+    const automation = new BrowserAutomationService(userBrowser, consoleCap, networkCap);
+    userBrowser.onViewCreated((wc) => {
+      consoleCap.attach(wc);
+      networkCap.attach(wc.session);
+    });
+    registerBrowserAutomationHandlers(automation);
+    sherpaMcpServer.setBrowserAutomation(automation);
+  } catch (err) {
+    console.warn('[browser-automation] startup wiring failed:', err);
+  }
+
   const sessionStore = new SessionStore();
 
   // Resolved early so PROJECT_OPEN / PROJECT_ADD can initialise the DB.
@@ -226,6 +251,8 @@ export function registerIpcHandlers(
       try {
         taskService.setDatabase(new ProjectDatabase(result.project.path));
       } catch { /* best-effort */ }
+      // Visual Formats Plan 01 / Task 7 — sync sherpa-file:// resolver root.
+      setCurrentProjectPath(result.project.path);
       try {
         const win = BrowserWindow.getFocusedWindow?.() ?? BrowserWindow.getAllWindows?.()[0] ?? null;
         if (win) {
@@ -243,6 +270,8 @@ export function registerIpcHandlers(
       try {
         taskService.setDatabase(new ProjectDatabase(opened.path));
       } catch { /* best-effort */ }
+      // Visual Formats Plan 01 / Task 7 — sync sherpa-file:// resolver root.
+      setCurrentProjectPath(opened.path);
       try {
         const win = BrowserWindow.getFocusedWindow?.() ?? BrowserWindow.getAllWindows?.()[0] ?? null;
         if (win) {
@@ -255,7 +284,16 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle(CH.PROJECT_REMOVE_FROM_RECENT, async (_event, id: string) => {
+    // Capture the project being removed so we can detect "remove of currently
+    // active project" and clear the sherpa-file:// resolver root.
+    const removed = await project.get(id);
     const result = await project.removeFromRecent(id);
+    if (result && removed) {
+      // Single-window model: treat removing the recent entry as closing it.
+      // (There's no separate "project close" IPC channel yet; this is the
+      // closest project-close lifecycle hook in main.)
+      setCurrentProjectPath(null);
+    }
     try {
       const win = BrowserWindow.getFocusedWindow?.() ?? BrowserWindow.getAllWindows?.()[0] ?? null;
       if (win) win.setTitle('Sherpa');
@@ -287,6 +325,13 @@ export function registerIpcHandlers(
       s.proxyAssignments ?? DEFAULT_PROXY_ASSIGNMENTS,
     );
     await userBrowser.applyProxy();
+    // Track C Plan 03 — refresh the MCP servers cache used by McpHandler.
+    // The cache is in-memory and only updated via this hook; missing token
+    // (older containers) silently no-ops.
+    try {
+      const refresh = container.resolve(PORT.refreshMcpServersCache);
+      refresh(s.mcpServers);
+    } catch { /* token may be absent in legacy test containers */ }
   });
 
   ipcMain.handle(CH.SETTINGS_GET_PROJECT, (_event, projectPath: string) =>
@@ -1667,6 +1712,23 @@ export function registerIpcHandlers(
         .filter((h) => h !== null);
     },
   );
+
+  // --- observability.* (Track E Plan 01) ------------------------------------
+  // Resolve the aggregator from the override parameter (tests) or from the
+  // container (production). Falls back gracefully to null — all handlers
+  // return empty arrays when no aggregator is available.
+  const aggregator: EventAggregator | null = (() => {
+    if (aggregatorOverride !== undefined) return aggregatorOverride;
+    try {
+      return container.resolve(PORT.aggregator);
+    } catch {
+      return null;
+    }
+  })();
+
+  ipcMain.handle(CH.OBSERV_STAGE_DURATIONS, () => aggregator?.stageDurations() ?? []);
+  ipcMain.handle(CH.OBSERV_GATE_OUTCOMES, () => aggregator?.gateOutcomes() ?? []);
+  ipcMain.handle(CH.OBSERV_TOOL_USAGE, () => aggregator?.toolUsage() ?? []);
 
   registerDebugHandlers();
 }

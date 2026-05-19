@@ -1,60 +1,97 @@
 .wrapper {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   height: 100%;
   overflow: hidden;
+  background: var(--bg-app);
 }
 
-.meta {
-  padding: 4px 12px;
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border-default);
-  font-size: var(--font-size-xs);
-  color: var(--fg-muted);
   background: var(--bg-elevated);
   flex-shrink: 0;
 }
 
-.tableWrap {
+.search {
   flex: 1;
+  max-width: 320px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--fg-default);
+  font-size: var(--font-size-sm);
+}
+
+.search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.meta {
+  margin-left: auto;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+.tableScroll {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 
 .table {
   border-collapse: collapse;
   font-size: var(--font-size-sm);
-  min-width: 100%;
-  white-space: nowrap;
+  width: 100%;
 }
 
-.table th {
+.thead {
   position: sticky;
   top: 0;
   background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  padding: 5px 12px;
-  text-align: left;
-  font-weight: 600;
   z-index: 1;
-  color: var(--fg-default);
 }
 
-.table td {
+.th,
+.td,
+.rowNum,
+.rowNumHead {
+  padding: 4px 10px;
   border: 1px solid var(--border-default);
-  padding: 4px 12px;
+  text-align: left;
+  white-space: nowrap;
   color: var(--fg-default);
-  max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.table tbody tr:hover { background: var(--bg-hover); }
-
-.rowNum {
-  color: var(--fg-faint, var(--fg-muted));
-  font-size: var(--font-size-xs);
-  text-align: right;
+.th {
+  cursor: pointer;
   user-select: none;
-  padding-right: 8px;
+  font-weight: 600;
+  background: var(--bg-elevated);
+}
+
+.th:hover {
+  background: var(--bg-hover);
+}
+
+.rowNum,
+.rowNumHead {
+  color: var(--fg-muted);
+  text-align: right;
+  background: var(--bg-elevated);
+  font-size: var(--font-size-xs);
+  user-select: none;
+}
+
+.sortIndicator {
+  color: var(--accent);
 }
 
 .empty {
@@ -62,6 +99,8 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+  padding: 20px;
   color: var(--fg-muted);
   font-size: var(--font-size-sm);
+  text-align: center;
 }

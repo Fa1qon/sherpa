@@ -7,13 +7,38 @@
     "error": "Error: no file path",
     "binary": "Binary file — preview not available",
     "preview": "Preview",
+    "source": "Source",
+    "tree": "Tree",
+    "jsonParseError": "JSON parse error",
     "edit": "Edit",
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
     "csvEmpty": "No data",
-    "csvRows": "{{count}} rows",
-    "csvCols": "{{count}} columns"
+    "csvRows": "rows",
+    "csvCols": "columns",
+    "csvSearch": "Search…",
+    "mindmap": "MindMap",
+    "pdf": "PDF"
+  },
+  "mermaid": {
+    "renderError": "Mermaid syntax error",
+    "rendering": "Rendering…"
+  },
+  "bpmn": {
+    "parseError": "BPMN parse error"
+  },
+  "markmap": {
+    "error": "MindMap rendering error",
+    "loading": "Loading…"
+  },
+  "excalidraw": {
+    "parseError": "Excalidraw file parse error",
+    "edit": "Edit",
+    "viewOnly": "View only"
+  },
+  "jupyter": {
+    "parseError": "Jupyter notebook parse error"
   },
   "chrome": {
     "menu": {
@@ -95,10 +120,24 @@
       "explainer": "Engine event log — shows stage transitions, gate evaluations, tool calls. Useful for understanding why the methodology chose a particular path."
     }
   },
+  "transparency": {
+    "title": "Transparency",
+    "input": "Input",
+    "output": "Output",
+    "filter": "Filter tools…",
+    "errorsOnly": "Errors only",
+    "empty": "No tool calls yet"
+  },
+  "callTree": {
+    "list": "List",
+    "tree": "Tree",
+    "empty": "No calls yet"
+  },
   "taskWorkspace": {
     "tab": {
       "chat": "Chat",
-      "journal": "Event log"
+      "journal": "Event log",
+      "transparency": "Transparency"
     },
     "sidebar": {
       "loading": "Loading…"
@@ -260,6 +299,9 @@
       "advanced": "Advanced",
       "network": "Network & Proxy",
       "agents": "Agents",
+      "mobileWeb": "Mobile Web",
+      "mcpServers": "MCP Servers",
+      "extensions": "Extensions",
       "project": "Project",
       "about": "About"
     },
@@ -330,7 +372,9 @@
         "aiBrowser": "AI Browser (headless)",
         "webSearch": "Web Search"
       },
-      "direct": "Direct (no proxy)"
+      "direct": "Direct (no proxy)",
+      "inboundTriggerPort": "Inbound trigger port",
+      "inboundTriggerPortHint": "0 for random, 1024–65535 otherwise"
     },
     "agents": {
       "description": "Manage API keys and authentication for each AI agent CLI. Credentials are stored in your local user settings.",
@@ -347,6 +391,40 @@
       "license": "License"
     }
   },
+  "mobileWeb": {
+    "title": "Mobile Web",
+    "enable": "Enable mobile web interface",
+    "port": "Port",
+    "pin": "PIN",
+    "setPin": "Set PIN",
+    "pinPlaceholder": "4-8 digits",
+    "pinError": "PIN must be 4-8 digits",
+    "pinUpdated": "PIN updated",
+    "hint": "Scan from phone on the same Wi-Fi",
+    "warn": "Server listens on 0.0.0.0 — anyone on this Wi-Fi can reach it. Use a strong PIN."
+  },
+  "mcpServers": {
+    "title": "MCP Servers",
+    "empty": "No MCP servers configured.",
+    "addServer": "Add server",
+    "edit": "Edit",
+    "remove": "Remove",
+    "test": "Test",
+    "id": "ID",
+    "transport": "Transport",
+    "stdio": "Stdio",
+    "sse": "SSE",
+    "command": "Command",
+    "args": "Args (one per line)",
+    "env": "Environment (KEY=VALUE per line)",
+    "cwd": "Working dir",
+    "url": "URL",
+    "headers": "Headers (KEY=VALUE per line)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "connectedTools": "Connected — {{count}} tools",
+    "connectionFailed": "Connection failed: {{error}}"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -362,6 +440,7 @@
     "library": "Library",
     "methodologyEditor": "Methodology",
     "file": "File",
+    "tracker": "Tracker",
     "discardConfirm": "Discard unsaved changes?"
   },
   "activityBar": {
@@ -373,7 +452,8 @@
     "vcs": "Source Control",
     "extensions": "Extensions",
     "activeTasks": "{{count}} active",
-    "browser": "Browser"
+    "browser": "Browser",
+    "analytics": "Analytics"
   },
   "sidebar": {
     "files": "Files",
@@ -651,6 +731,15 @@
     "gateItems": "Gate items",
     "addGateItem": "+ Gate item"
   },
+  "analytics": {
+    "title": "Analytics",
+    "refresh": "Refresh",
+    "stageDurations": "Stage durations (ms)",
+    "gateOutcomes": "Gate pass / fail / pending",
+    "tools": "Tool usage",
+    "tasksOverTime": "Tasks over time",
+    "noData": "No data"
+  },
   "tracker": {
     "board": "Board",
     "noProject": "No project open.",
@@ -661,5 +750,12 @@
     "settings.stages": "Stages",
     "settings.addStage": "Add stage",
     "settings.newStage": "New Stage"
+  },
+  "extensions": {
+    "title": "Extensions",
+    "install": "Install from .zip",
+    "uninstall": "Uninstall",
+    "uninstallConfirm": "Uninstall \"{{id}}\"?",
+    "empty": "No extensions installed"
   }
 }

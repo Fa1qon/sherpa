@@ -34,9 +34,49 @@ declare module 'cytoscape-fcose' {
   export default fcose;
 }
 
+// @nteract/notebook-render@4.0.3 ships only flow types — no .d.ts.
+// We only consume the default export (a React.PureComponent subclass)
+// with the `notebook` prop, so a narrow shim is sufficient. See
+// src/presentation/fileviewer/JupyterViewer.tsx for the only consumer.
+declare module '@nteract/notebook-render' {
+  import type { ComponentType } from 'react';
+  interface NotebookRenderProps {
+    notebook: unknown;
+    theme?: 'light' | 'dark';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    displayOrder?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    transforms?: any;
+  }
+  const NotebookRender: ComponentType<NotebookRenderProps>;
+  export default NotebookRender;
+}
+
 // Typed bridge surface — keep in sync with src/main/preload.ts.
 // Using an `import(...)` type expression rather than a top-level `import`
 // preserves the file's script (non-module) status; see header note.
 interface Window {
   readonly sherpa: import('../main/preload').SherpaApi;
+}
+
+// Electron <webview> tag — Electron exposes this as an HTMLElement subclass
+// (Electron.WebviewTag). Declaring it in JSX.IntrinsicElements lets React
+// type-check `<webview src=... ref=...>` correctly without `as any`.
+declare namespace JSX {
+  interface IntrinsicElements {
+    webview: import('react').DetailedHTMLProps<
+      import('react').HTMLAttributes<HTMLElement> & {
+        src?: string;
+        allowpopups?: string | boolean;
+        partition?: string;
+        useragent?: string;
+        nodeintegration?: string | boolean;
+        webpreferences?: string;
+        httpreferrer?: string;
+        disablewebsecurity?: string | boolean;
+        preload?: string;
+      },
+      HTMLElement
+    >;
+  }
 }

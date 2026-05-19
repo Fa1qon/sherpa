@@ -1,0 +1,10 @@
+{
+  "id": "com.sherpa.test.hello",
+  "name": "Hello Extension",
+  "version": "0.1.0",
+  "description": "Says hi on task creation",
+  "engines": { "sherpa": ">=0.23.0" },
+  "permissions": ["events.subscribe"],
+  "entry": { "main": "main.js" },
+  "subscriptions": ["task.created"]
+}

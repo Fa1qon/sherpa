@@ -1,4 +1,5 @@
 import { useState, type ReactElement } from 'react';
+import type { ViewerProps } from './viewer_registry';
 import styles from './ImageViewer.module.css';
 
 const MIME_MAP: Record<string, string> = {
@@ -16,14 +17,9 @@ const MIME_MAP: Record<string, string> = {
 
 const ZOOM_STEPS = [25, 50, 75, 100, 125, 150, 200, 300, 400];
 
-interface Props {
-  base64: string;
-  ext: string;
-}
-
-export function ImageViewer({ base64, ext }: Props): ReactElement {
+export function ImageViewer({ content, ext }: ViewerProps): ReactElement {
   const mime = MIME_MAP[ext.toLowerCase()] ?? 'image/png';
-  const src = `data:${mime};base64,${base64}`;
+  const src = `data:${mime};base64,${content}`;
 
   const [zoomIdx, setZoomIdx] = useState(ZOOM_STEPS.indexOf(100));
   const zoom = ZOOM_STEPS[zoomIdx] ?? 100;

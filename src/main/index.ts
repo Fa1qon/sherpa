@@ -9,15 +9,43 @@
 // output directly. The renderer (src/renderer/) stays ESM/Bundler under the
 // project tsconfig.json — see DEVIATION note in BUILD_LOG.md.
 
-import { app, BrowserWindow, Menu, ipcMain } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain, protocol } from 'electron';
 import path from 'node:path';
-import { buildContainer } from './composition_root';
+import { buildContainer, PORT } from './composition_root';
+import type { Container } from './container';
 import { registerIpcHandlers } from './ipc';
 import { setupIpcEventBridge } from './events/ipc_event_bridge';
 import { registerUserBrowserHandlers } from './ipc/user_browser_handlers';
 import { userBrowser } from './services/user_browser';
+import { registerSherpaFileProtocol } from './protocols/register_sherpa_file_protocol';
+
+// Visual Formats Plan 01 / Task 6 — privileged custom scheme for project-
+// relative assets. Must be registered BEFORE `app.whenReady()`. Renderer-side
+// markdown viewers (Plan 05) consume URLs of the form
+// `sherpa-file://current/<rel/path>`; the handler is bound after ready.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'sherpa-file',
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true },
+  },
+]);
 
 let mainWindow: BrowserWindow | null = null;
+let appContainer: Container | null = null;
+
+/**
+ * Refresh the EventBus's window list so APP_EVENT broadcasts reach every
+ * live BrowserWindow. Called after each window is created and after a
+ * window is closed.
+ */
+function refreshEventBusWindows(): void {
+  if (!appContainer) return;
+  try {
+    appContainer.resolve(PORT.eventBus).setWindows(BrowserWindow.getAllWindows());
+  } catch {
+    // EventBus not registered (shouldn't happen in production); skip.
+  }
+}
 
 function createMainWindow(): void {
   const iconPath = path.join(__dirname, '..', '..', 'build', 'icons', 'icon-256.png');
@@ -31,8 +59,14 @@ function createMainWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // Enables the <webview> tag — used by BrowserTab so the embedded
+      // browser sits inside the React DOM (no native WebContentsView
+      // overlay + coord sync). With webviewTag on, the webview gets a
+      // dedicated renderer process, isolated from the host.
+      webviewTag: true,
     },
   });
+  refreshEventBusWindows();
 
   // Renderer load strategy:
   //   - SHERPA_DEV_URL env: Vite dev server (T-L1-10 wires this).
@@ -60,6 +94,7 @@ function createMainWindow(): void {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    refreshEventBusWindows();
   });
 }
 
@@ -79,12 +114,14 @@ if (!gotTheLock) {
     Menu.setApplicationMenu(null);
     // Composition Root — resolve adapters once, exactly here (ADR-001 §1).
     const container = buildContainer();
+    appContainer = container;
 
     // Register typed IPC handlers (T-L1-09) before any BrowserWindow is
     // shown so the renderer can invoke channels from its very first tick.
     registerIpcHandlers(container);
     setupIpcEventBridge();
     registerUserBrowserHandlers();
+    registerSherpaFileProtocol();
 
     // Dev-tools shortcut — available in all builds for diagnostics.
     ipcMain.on('app:open-devtools', (event) => {
@@ -95,6 +132,7 @@ if (!gotTheLock) {
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+      else refreshEventBusWindows();
     });
 
     // Test-mode auto-exit: if SHERPA_TEST_LAUNCH is set to a number of ms,

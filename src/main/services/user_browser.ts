@@ -1,100 +1,121 @@
 // src/main/services/user_browser.ts
-// Singleton WebContentsView for user-facing (non-AI) browsing.
-// The renderer measures its viewport div and calls show() with pixel coords;
-// the native view is positioned over that div so the React URL bar stays
-// visible above it. Calling hide() makes the view invisible without destroying
-// it so navigation state is preserved across tab switches.
+//
+// Thin wrapper around the renderer-owned <webview> tag (registered by
+// BrowserTab on dom-ready). Previously created a native WebContentsView
+// and synced bounds with the renderer — that approach hit unsolvable
+// coord/DPI issues on Windows.
+//
+// Public API kept stable for: BrowserAutomationService (Track B MCP
+// tools), Plan-01 HtmlViewer, PdfViewer (which used show/hide). show/
+// hide become no-ops; the new attach/detachWebContents lifecycle is
+// what UI calls now.
 
-import { WebContentsView } from 'electron';
-import type { BrowserWindow } from 'electron';
+import { webContents as electronWebContents } from 'electron';
+import type { BrowserWindow, WebContents } from 'electron';
 import { proxyManager } from './proxy_manager';
 
 type UrlChangedHandler = (url: string, title: string) => void;
+type ViewCreatedHandler = (wc: WebContents) => void;
 
 export class UserBrowser {
-  private view: InstanceType<typeof WebContentsView> | null = null;
+  private webContentsId: number | null = null;
   private mainWindow: BrowserWindow | null = null;
   private handlers: UrlChangedHandler[] = [];
+  private viewCreatedHandlers: ViewCreatedHandler[] = [];
+  private attachedListenerWc: WebContents | null = null;
 
   setMainWindow(win: BrowserWindow): void {
     this.mainWindow = win;
   }
 
-  show(x: number, y: number, width: number, height: number, url?: string): void {
-    if (!this.mainWindow) return;
-
-    if (!this.view) {
-      this.view = new WebContentsView({
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true,
-          sandbox: true,
-        },
-      });
-      this.mainWindow.contentView.addChildView(this.view);
-      void this.applyProxy();
-
-      const wc = this.view.webContents;
-
-      wc.on('did-navigate', (_e, navUrl) => {
-        const title = wc.getTitle();
-        for (const h of this.handlers) h(navUrl, title);
-      });
-      wc.on('did-navigate-in-page', (_e, navUrl) => {
-        const title = wc.getTitle();
-        for (const h of this.handlers) h(navUrl, title);
-      });
-      wc.on('page-title-updated', (_e, title) => {
-        const navUrl = wc.getURL();
-        for (const h of this.handlers) h(navUrl, title);
-      });
+  /**
+   * Called by the renderer when the <webview> tag becomes dom-ready.
+   * Passes the webContents id so we can route navigation / automation
+   * calls through electronWebContents.fromId.
+   *
+   * Pass null on unmount to clear the registration.
+   */
+  attachWebContents(id: number | null): void {
+    if (this.attachedListenerWc) {
+      try { this.attachedListenerWc.removeAllListeners('did-navigate'); } catch { /* ok */ }
+      try { this.attachedListenerWc.removeAllListeners('did-navigate-in-page'); } catch { /* ok */ }
+      try { this.attachedListenerWc.removeAllListeners('page-title-updated'); } catch { /* ok */ }
+      this.attachedListenerWc = null;
     }
+    this.webContentsId = id;
+    if (id === null) return;
 
-    this.view.setBounds({
-      x: Math.round(x),
-      y: Math.round(y),
-      width: Math.max(1, Math.round(width)),
-      height: Math.max(1, Math.round(height)),
+    const wc = electronWebContents.fromId(id);
+    if (!wc) return;
+    this.attachedListenerWc = wc;
+
+    // Apply current proxy settings to the new webview's session.
+    void this.applyProxy().catch(() => { /* best-effort */ });
+
+    wc.on('did-navigate', (_e, url) => {
+      const title = wc.getTitle();
+      for (const h of this.handlers) h(url, title);
     });
-    this.view.setVisible(true);
+    wc.on('did-navigate-in-page', (_e, url) => {
+      const title = wc.getTitle();
+      for (const h of this.handlers) h(url, title);
+    });
+    wc.on('page-title-updated', (_e, title) => {
+      const url = wc.getURL();
+      for (const h of this.handlers) h(url, title);
+    });
 
-    if (url) {
-      const current = this.view.webContents.getURL();
-      if (current !== url) {
-        void this.view.webContents.loadURL(url).catch(() => { /* best-effort */ });
-      }
+    // Fire onViewCreated handlers now that we have a real webContents.
+    const queued = this.viewCreatedHandlers;
+    this.viewCreatedHandlers = [];
+    for (const h of queued) {
+      try { h(wc); } catch { /* best-effort */ }
     }
   }
 
-  hide(): void {
-    this.view?.setVisible(false);
+  /**
+   * Legacy no-op (kept for back-compat). The <webview> renders itself;
+   * positioning is CSS, not setBounds.
+   */
+  show(_x?: number, _y?: number, _width?: number, _height?: number, url?: string): void {
+    if (url) this.navigate(url);
   }
+
+  /** Legacy no-op. The webview hides when its React parent unmounts. */
+  hide(): void { /* no-op */ }
 
   navigate(url: string): void {
-    if (!this.view) return;
-    void this.view.webContents.loadURL(url).catch(() => { /* best-effort */ });
+    const wc = this.getWebContents();
+    if (!wc) return;
+    void wc.loadURL(url).catch(() => { /* best-effort */ });
   }
 
   back(): void {
-    if (this.view?.webContents.canGoBack()) this.view.webContents.goBack();
+    const wc = this.getWebContents();
+    if (wc?.canGoBack()) wc.goBack();
   }
 
   forward(): void {
-    if (this.view?.webContents.canGoForward()) this.view.webContents.goForward();
+    const wc = this.getWebContents();
+    if (wc?.canGoForward()) wc.goForward();
   }
 
   reload(): void {
-    this.view?.webContents.reload();
+    this.getWebContents()?.reload();
   }
 
-  async applyProxy(): Promise<void> {
-    if (!this.view) return;
-    const proxyUrl = proxyManager.getProxyUrl('userBrowser');
-    const noProxy = proxyManager.getNoProxy('userBrowser');
-    await this.view.webContents.session.setProxy({
-      proxyRules: proxyUrl ?? 'direct://',
-      proxyBypassRules: noProxy,
-    });
+  getWebContents(): WebContents | null {
+    if (this.webContentsId === null) return null;
+    const wc = electronWebContents.fromId(this.webContentsId);
+    if (!wc || wc.isDestroyed()) {
+      this.webContentsId = null;
+      return null;
+    }
+    return wc;
+  }
+
+  isReady(): boolean {
+    return this.getWebContents() !== null;
   }
 
   onUrlChanged(handler: UrlChangedHandler): () => void {
@@ -102,12 +123,39 @@ export class UserBrowser {
     return () => { this.handlers = this.handlers.filter((h) => h !== handler); };
   }
 
-  close(): void {
-    if (this.view) {
-      try { this.view.webContents.close(); } catch { /* already destroyed */ }
-      try { this.mainWindow?.contentView.removeChildView(this.view); } catch { /* best-effort */ }
-      this.view = null;
+  /**
+   * Register a handler that fires once when the webview's webContents
+   * becomes available. If already attached, fires synchronously.
+   */
+  onViewCreated(handler: ViewCreatedHandler): () => void {
+    const wc = this.getWebContents();
+    if (wc) {
+      try { handler(wc); } catch { /* best-effort */ }
+      return () => { /* already fired */ };
     }
+    this.viewCreatedHandlers.push(handler);
+    return () => {
+      this.viewCreatedHandlers = this.viewCreatedHandlers.filter((h) => h !== handler);
+    };
+  }
+
+  /**
+   * Apply current proxy settings to the active webview's session.
+   * Called automatically on attach and from the Settings save handler.
+   */
+  async applyProxy(): Promise<void> {
+    const wc = this.getWebContents();
+    if (!wc) return;
+    const proxyUrl = proxyManager.getProxyUrl('userBrowser');
+    const noProxy = proxyManager.getNoProxy('userBrowser');
+    await wc.session.setProxy({
+      proxyRules: proxyUrl ?? 'direct://',
+      proxyBypassRules: noProxy,
+    });
+  }
+
+  close(): void {
+    this.attachWebContents(null);
   }
 }
 

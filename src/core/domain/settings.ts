@@ -7,6 +7,8 @@ import type { EffortLevel } from './task';
 import type { InvolvementPreset } from './involvement';
 import type { ProxyEntry, ProxyAssignments } from './proxy';
 import { isProxyEntry, isProxyAssignments } from './proxy';
+import type { McpServerConfig } from './mcp_server';
+import { isMcpServerConfig } from './mcp_server';
 
 export type Theme = 'dark' | 'light' | 'auto';
 export type Language = 'en' | 'ru';
@@ -46,6 +48,13 @@ export interface CostTrackingSettings {
   readonly pricePerMillionOutputTokens: number;
 }
 
+export interface MobileWebSettings {
+  readonly enabled: boolean;
+  readonly port: number;
+  /** Hashed or plaintext PIN — v1 stores plaintext per plan; brute-force lock at server. Optional so unset state is representable. */
+  readonly pin?: string;
+}
+
 export interface UserSettings {
   readonly theme: Theme;
   readonly language: Language;
@@ -62,6 +71,13 @@ export interface UserSettings {
   readonly proxyAssignments?: ProxyAssignments;
   /** Per-agent credentials (API keys or OAuth tokens). Absent = no credentials stored. */
   readonly agentCredentials?: Readonly<Partial<Record<AgentCli, AgentCredential>>>;
+  /** Mobile Web server settings (Track D). Absent = disabled. */
+  readonly mobileWeb?: MobileWebSettings;
+  /** MCP server configurations (Track C Plan 03). Absent = none. */
+  readonly mcpServers?: readonly McpServerConfig[];
+  /** Inbound trigger HTTP port (Track C Plan 04). 0 = random; 1024–65535
+   *  otherwise. Default 19222. */
+  readonly inboundTriggerPort?: number;
 }
 
 export interface ProjectSettings {
@@ -108,6 +124,7 @@ export function defaultUserSettings(): UserSettings {
     },
     complianceOutputMode: 'file',
     showEventLog: false,
+    inboundTriggerPort: 19222,
   };
 }
 
@@ -120,6 +137,16 @@ export function defaultProjectSettings(): ProjectSettings {
     defaultEffort: 'normal',
     allowOutsideProjectAccess: false,
   };
+}
+
+function isMobileWebSettings(v: unknown): v is MobileWebSettings {
+  if (typeof v !== 'object' || v === null) return false;
+  const m = v as Record<string, unknown>;
+  return (
+    typeof m.enabled === 'boolean' &&
+    typeof m.port === 'number' &&
+    (m.pin === undefined || typeof m.pin === 'string')
+  );
 }
 
 function isAgentCredential(v: unknown): v is AgentCredential {
@@ -173,7 +200,16 @@ export function isUserSettings(value: unknown): value is UserSettings {
         Object.entries(v.agentCredentials as Record<string, unknown>).every(
           ([k, val]) =>
             (AGENT_CLIS as readonly string[]).includes(k) && isAgentCredential(val),
-        )))
+        ))) &&
+    (v.mobileWeb === undefined || isMobileWebSettings(v.mobileWeb)) &&
+    (v.mcpServers === undefined ||
+      (Array.isArray(v.mcpServers) && v.mcpServers.every(isMcpServerConfig))) &&
+    (v.inboundTriggerPort === undefined ||
+      (typeof v.inboundTriggerPort === 'number' &&
+        Number.isInteger(v.inboundTriggerPort) &&
+        v.inboundTriggerPort >= 0 &&
+        v.inboundTriggerPort <= 65535 &&
+        (v.inboundTriggerPort === 0 || v.inboundTriggerPort >= 1024)))
   );
 }
 

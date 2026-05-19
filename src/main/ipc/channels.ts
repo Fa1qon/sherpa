@@ -111,6 +111,55 @@ export const CH = {
   AGENT_AUTH_STATUS: 'agent.authStatus',
   AGENT_HEALTH: 'agent.health',
 
+  // Extension framework — per-extension key/value storage (Plan 03 Task 7).
+  // Anti-spoofing: the main handler validates the supplied extId against
+  // the set of loaded enabled extensions (wired in Plan 05 loader).
+  EXTENSION_STORAGE_GET: 'extension.storage.get',
+  EXTENSION_STORAGE_SET: 'extension.storage.set',
+  EXTENSION_STORAGE_DELETE: 'extension.storage.delete',
+
+  // Extension framework — lifecycle management (Plan 05 Task 4).
+  // The Extension Manager UI calls these to list / enable / disable /
+  // install / uninstall extensions. Settings get/set are scoped per id.
+  EXTENSION_LIST: 'extension.list',
+  EXTENSION_ENABLE: 'extension.enable',
+  EXTENSION_DISABLE: 'extension.disable',
+  EXTENSION_INSTALL_ZIP: 'extension.installZip',
+  EXTENSION_INSTALL_DIR: 'extension.installDir',
+  EXTENSION_UNINSTALL: 'extension.uninstall',
+  EXTENSION_GET_SETTINGS: 'extension.getSettings',
+  EXTENSION_SET_SETTINGS: 'extension.setSettings',
+  EXTENSION_PICK_ZIP: 'extension.pickZip',
+
+  // Browser automation tool channels (Track B / B5)
+  BROWSER_TOOL_NAVIGATE: 'browser.tool.navigate',
+  BROWSER_TOOL_SCREENSHOT: 'browser.tool.screenshot',
+  BROWSER_TOOL_GET_HTML: 'browser.tool.getHtml',
+  BROWSER_TOOL_QUERY_SELECTOR: 'browser.tool.querySelector',
+  BROWSER_TOOL_EVALUATE_JS: 'browser.tool.evaluateJs',
+  BROWSER_TOOL_CLICK: 'browser.tool.click',
+  BROWSER_TOOL_TYPE: 'browser.tool.type',
+  BROWSER_TOOL_KEY: 'browser.tool.key',
+  BROWSER_TOOL_DRAG: 'browser.tool.drag',
+  BROWSER_TOOL_RESIZE: 'browser.tool.resize',
+  BROWSER_TOOL_CONSOLE_ERRORS: 'browser.tool.consoleErrors',
+  BROWSER_TOOL_NETWORK_LOG: 'browser.tool.networkLog',
+
+  // Observability domain (Track E Plan 01) — aggregated stage/tool/gate metrics.
+  OBSERV_STAGE_DURATIONS: 'observ.stageDurations',
+  OBSERV_GATE_OUTCOMES: 'observ.gateOutcomes',
+  OBSERV_TOOL_USAGE: 'observ.toolUsage',
+
+  // Mobile Web (Track D)
+  MOBILE_WEB_STATUS: 'mobileWeb.status',
+  MOBILE_WEB_SET_PIN: 'mobileWeb.setPin',
+  MOBILE_WEB_RESTART: 'mobileWeb.restart',
+
+  // MCP server domain (Track C Plan 03 — pipeline plugins) — test-ping a
+  // configured MCP server: connect, list tools, disconnect; returns the
+  // tool name list or an error string.
+  MCP_PING: 'mcp.ping',
+
   // Plans 2-5 add: methodology.*, task.*, agent.*, tool.*, cases.*, ...
 } as const;
 

@@ -7,13 +7,38 @@
     "error": "Ошибка: файл не указан",
     "binary": "Бинарный файл — просмотр недоступен",
     "preview": "Просмотр",
+    "source": "Источник",
+    "tree": "Дерево",
+    "jsonParseError": "Ошибка разбора JSON",
     "edit": "Редактировать",
     "save": "Сохранить",
     "saving": "Сохранение…",
     "cancel": "Отмена",
     "csvEmpty": "Нет данных",
-    "csvRows": "{{count}} строк",
-    "csvCols": "{{count}} колонок"
+    "csvRows": "строк",
+    "csvCols": "колонок",
+    "csvSearch": "Поиск…",
+    "mindmap": "MindMap",
+    "pdf": "PDF"
+  },
+  "mermaid": {
+    "renderError": "Ошибка синтаксиса Mermaid",
+    "rendering": "Рендеринг…"
+  },
+  "bpmn": {
+    "parseError": "Ошибка парсинга BPMN"
+  },
+  "markmap": {
+    "error": "Ошибка рендеринга MindMap",
+    "loading": "Загрузка…"
+  },
+  "excalidraw": {
+    "parseError": "Ошибка парсинга Excalidraw",
+    "edit": "Редактировать",
+    "viewOnly": "Только просмотр"
+  },
+  "jupyter": {
+    "parseError": "Ошибка парсинга Jupyter notebook"
   },
   "chrome": {
     "menu": {
@@ -95,10 +120,24 @@
       "explainer": "Журнал событий движка — переходы между этапами, оценка гейтов, вызовы инструментов. Помогает понять, почему методология выбрала данный путь."
     }
   },
+  "transparency": {
+    "title": "Прозрачность",
+    "input": "Вход",
+    "output": "Выход",
+    "filter": "Фильтр инструментов…",
+    "errorsOnly": "Только ошибки",
+    "empty": "Вызовов инструментов пока нет"
+  },
+  "callTree": {
+    "list": "Список",
+    "tree": "Дерево",
+    "empty": "Пока нет вызовов"
+  },
   "taskWorkspace": {
     "tab": {
       "chat": "Чат",
-      "journal": "Журнал событий"
+      "journal": "Журнал событий",
+      "transparency": "Прозрачность"
     },
     "sidebar": {
       "loading": "Загрузка…"
@@ -260,6 +299,9 @@
       "advanced": "Дополнительно",
       "network": "Сеть и прокси",
       "agents": "Агенты",
+      "mobileWeb": "Мобильный веб",
+      "mcpServers": "MCP-серверы",
+      "extensions": "Расширения",
       "project": "Проект",
       "about": "О программе"
     },
@@ -330,7 +372,9 @@
         "aiBrowser": "ИИ-браузер (headless)",
         "webSearch": "Веб-поиск"
       },
-      "direct": "Напрямую (без прокси)"
+      "direct": "Напрямую (без прокси)",
+      "inboundTriggerPort": "Порт входящих триггеров",
+      "inboundTriggerPortHint": "0 — случайный порт, иначе 1024–65535"
     },
     "agents": {
       "description": "Управление API-ключами и аутентификацией для каждого AI-агента. Учётные данные хранятся в ваших локальных настройках.",
@@ -347,6 +391,40 @@
       "license": "Лицензия"
     }
   },
+  "mobileWeb": {
+    "title": "Мобильный веб",
+    "enable": "Включить мобильный веб-интерфейс",
+    "port": "Порт",
+    "pin": "PIN",
+    "setPin": "Задать PIN",
+    "pinPlaceholder": "4-8 цифр",
+    "pinError": "PIN должен содержать 4-8 цифр",
+    "pinUpdated": "PIN обновлён",
+    "hint": "Отсканируйте с телефона в той же Wi-Fi сети",
+    "warn": "Сервер слушает 0.0.0.0 — любой в этой Wi-Fi сети может подключиться. Используйте сильный PIN."
+  },
+  "mcpServers": {
+    "title": "MCP-серверы",
+    "empty": "MCP-серверы не настроены.",
+    "addServer": "Добавить сервер",
+    "edit": "Изменить",
+    "remove": "Удалить",
+    "test": "Проверить",
+    "id": "ID",
+    "transport": "Транспорт",
+    "stdio": "Stdio",
+    "sse": "SSE",
+    "command": "Команда",
+    "args": "Аргументы (по одному на строку)",
+    "env": "Переменные окружения (KEY=VALUE на строку)",
+    "cwd": "Рабочая директория",
+    "url": "URL",
+    "headers": "Заголовки (KEY=VALUE на строку)",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "connectedTools": "Подключено — инструментов: {{count}}",
+    "connectionFailed": "Ошибка подключения: {{error}}"
+  },
   "common": {
     "save": "Сохранить",
     "cancel": "Отмена",
@@ -362,6 +440,7 @@
     "library": "Библиотека",
     "methodologyEditor": "Методика",
     "file": "Файл",
+    "tracker": "Трекер",
     "discardConfirm": "Отменить несохранённые изменения?"
   },
   "activityBar": {
@@ -373,7 +452,8 @@
     "vcs": "Контроль версий",
     "extensions": "Расширения",
     "activeTasks": "{{count}} активных",
-    "browser": "Браузер"
+    "browser": "Браузер",
+    "analytics": "Аналитика"
   },
   "sidebar": {
     "files": "Файлы",
@@ -651,6 +731,15 @@
     "gateItems": "Критерии гейта",
     "addGateItem": "+ Критерий"
   },
+  "analytics": {
+    "title": "Аналитика",
+    "refresh": "Обновить",
+    "stageDurations": "Длительность стадий (мс)",
+    "gateOutcomes": "Гейты: прошёл / провал / ожидание",
+    "tools": "Использование инструментов",
+    "tasksOverTime": "Задачи по времени",
+    "noData": "Нет данных"
+  },
   "tracker": {
     "board": "Доска",
     "noProject": "Проект не открыт.",
@@ -661,5 +750,12 @@
     "settings.stages": "Стадии",
     "settings.addStage": "Добавить стадию",
     "settings.newStage": "Новая стадия"
+  },
+  "extensions": {
+    "title": "Расширения",
+    "install": "Установить из .zip",
+    "uninstall": "Удалить",
+    "uninstallConfirm": "Удалить «{{id}}»?",
+    "empty": "Расширения не установлены"
   }
 }

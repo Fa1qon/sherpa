@@ -13,4 +13,10 @@ export const ipcClient = {
   events: () => window.sherpa.events,
   knowledge: () => window.sherpa.knowledge,
   templates: () => window.sherpa.templates,
+  observability: () => window.sherpa.observability,
+  mobileWeb: () => window.sherpa.mobileWeb,
+  trace: () => window.sherpa.trace,
+  mcp: () => window.sherpa.mcp,
+  // Extension Framework Plan 05 — Extension Manager UI.
+  extensions: () => window.sherpa.extensions,
 };

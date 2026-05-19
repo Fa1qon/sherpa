@@ -1,5 +1,5 @@
 // src/renderer/App.tsx
-import { useCallback, useEffect, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useState, Suspense, lazy, type ReactElement } from 'react';
 import { useShellState } from './store/shell_state';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { I18nProvider } from './providers/I18nProvider';
@@ -12,6 +12,9 @@ import { useRightSidebar } from './store/right_sidebar';
 import { useTranslation } from 'react-i18next';
 import { FileViewer } from '../presentation/fileviewer/FileViewer';
 import { BrowserTab } from '../presentation/screens/BrowserTab/BrowserTab';
+const AnalyticsScreen = lazy(() =>
+  import('../presentation/screens/Analytics/Analytics').then((m) => ({ default: m.Analytics })),
+);
 import { KanbanBoard } from '../presentation/screens/Tracker/KanbanBoard';
 import { ProjectPicker } from '../presentation/screens/ProjectPicker';
 import { EmptyWorkspace } from '../presentation/screens/EmptyWorkspace';
@@ -210,7 +213,6 @@ interface TabContentProps {
 }
 
 function TabContent({ tab, onAction }: TabContentProps): ReactElement {
-  const projectPath = useProject((s) => s.current?.path);
   switch (tab.kind) {
     case 'task':
       return <TaskContent />;
@@ -222,20 +224,18 @@ function TabContent({ tab, onAction }: TabContentProps): ReactElement {
       const methodologyId = tab.params?.methodologyId;
       return <Library methodologyId={methodologyId} />;
     }
-    case 'file': {
-      const relPath = tab.params?.relPath ?? '';
-      if (relPath.toLowerCase().endsWith('.html') && projectPath) {
-        // Normalise to forward slashes; prepend extra / for Windows drive letters.
-        const abs = `${projectPath}/${relPath}`.replace(/\\/g, '/');
-        const fileUrl = abs.startsWith('/') ? `file://${abs}` : `file:///${abs}`;
-        return <BrowserTab initialUrl={fileUrl} />;
-      }
+    case 'file':
       return <FileViewer />;
-    }
     case 'browser':
       return <BrowserTab initialUrl={tab.params?.url} />;
     case 'tracker':
       return <KanbanBoard />;
+    case 'analytics':
+      return (
+        <Suspense fallback={<div />}>
+          <AnalyticsScreen />
+        </Suspense>
+      );
     default:
       return <EmptyWorkspace onAction={onAction} />;
   }

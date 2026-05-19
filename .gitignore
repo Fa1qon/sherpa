@@ -8,6 +8,7 @@ tests/visual/diffs/
 playwright-report/
 test-results/
 dist-electron/
+dist-mobile/
 out/
 # build/ ships installer build resources (icons, installer-scripts) that MUST
 # be tracked. The legacy ignore was intended for a now-defunct ad-hoc /build

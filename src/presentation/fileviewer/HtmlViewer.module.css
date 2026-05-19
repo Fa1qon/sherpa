@@ -1,0 +1,35 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.viewport {
+  flex: 1;
+  min-height: 0;
+}
+
+.webview {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  display: flex;
+  background: var(--bg-app);
+}

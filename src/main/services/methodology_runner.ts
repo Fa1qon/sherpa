@@ -33,6 +33,7 @@ import type { Task } from '../../core/domain/task';
 import type { TaskMeta } from '../../core/domain/task_meta';
 import type { StageRunner, StageResult, TraceLogger, TraceEvent } from './stage_runner';
 import type { MetaMdStore } from './gate_evaluator';
+import type { PluginExecutor } from '../plugins/plugin_executor';
 import { parseConditionExpr } from '../../core/domain/condition_expr';
 import {
   evaluateConditionExpr,
@@ -66,6 +67,9 @@ export class MethodologyRunner extends EventEmitter {
     private readonly stageRunner: StageRunner,
     private readonly metaStore: MetaMdStore,
     private readonly traceLogger: TraceLogger,
+    // Track C Plan 02 — optional pipeline plugin executor. Refreshed with
+    // the active methodology's plugin manifest at the start of each run.
+    private readonly pluginExecutor: PluginExecutor | null = null,
   ) {
     super();
   }
@@ -110,6 +114,11 @@ export class MethodologyRunner extends EventEmitter {
     task: Task,
     projectPath: string,
   ): Promise<TaskRunResult> {
+    // Track C Plan 02 — load this methodology's plugin manifest into the
+    // executor so hook dispatches from StageRunner / GateEvaluator /
+    // ArtifactStore / TaskSupervisor see the right plugins.
+    this.pluginExecutor?.setPlugins([...(methodology.plugins ?? [])]);
+
     const meta = await this.metaStore.load(projectPath, task.id);
     let currentStageId: string = meta.current_stage ?? this.firstStageId(methodology);
 

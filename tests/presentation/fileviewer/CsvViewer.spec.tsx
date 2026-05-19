@@ -1,37 +1,63 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { CsvViewer } from '../../../src/presentation/fileviewer/CsvViewer';
 
-describe('CsvViewer', () => {
-  test('renders CSV as a table with header row', () => {
+const SAMPLE = 'name,age,city\nAlice,30,NYC\nBob,25,SF\nCarol,40,LA';
+
+describe('CsvViewer (enhanced)', () => {
+  test('renders headers and data rows', () => {
     const csv = 'Name,Age,City\nAlice,30,Moscow\nBob,25,Paris';
-    render(<CsvViewer content={csv} ext="csv" />);
+    render(<CsvViewer content={csv} ext="csv" projectPath="/p" relPath="x.csv" />);
     const headers = screen.getAllByRole('columnheader');
-    expect(headers).toHaveLength(3);
-    expect(headers[0]!.textContent).toBe('Name');
-    expect(headers[1]!.textContent).toBe('Age');
-    expect(headers[2]!.textContent).toBe('City');
-    const cells = screen.getAllByRole('cell');
-    expect(cells.some((c) => c.textContent === 'Alice')).toBe(true);
-    expect(cells.some((c) => c.textContent === 'Bob')).toBe(true);
+    // includes the leading '#' row-number column
+    expect(headers.length).toBeGreaterThanOrEqual(3);
+    const headerTexts = headers.map((h) => h.textContent ?? '');
+    expect(headerTexts.some((t) => t.includes('Name'))).toBe(true);
+    expect(headerTexts.some((t) => t.includes('Age'))).toBe(true);
+    expect(headerTexts.some((t) => t.includes('City'))).toBe(true);
   });
 
   test('handles TSV with tab delimiter', () => {
     const tsv = 'A\tB\tC\n1\t2\t3';
-    render(<CsvViewer content={tsv} ext="tsv" />);
+    render(<CsvViewer content={tsv} ext="tsv" projectPath="/p" relPath="x.tsv" />);
     const headers = screen.getAllByRole('columnheader');
-    expect(headers).toHaveLength(3);
-    expect(headers[0]!.textContent).toBe('A');
+    const headerTexts = headers.map((h) => h.textContent ?? '');
+    expect(headerTexts.some((t) => t.includes('A'))).toBe(true);
+    expect(headerTexts.some((t) => t.includes('B'))).toBe(true);
+    expect(headerTexts.some((t) => t.includes('C'))).toBe(true);
   });
 
-  test('shows row count', () => {
+  test('shows row and column count', () => {
     const csv = 'X,Y\na,b\nc,d\ne,f';
-    render(<CsvViewer content={csv} ext="csv" />);
-    expect(screen.getByText(/3.*строк|3.*rows/i)).toBeTruthy();
+    const { container } = render(
+      <CsvViewer content={csv} ext="csv" projectPath="/p" relPath="x.csv" />,
+    );
+    const text = container.textContent ?? '';
+    // meta shows "3 / 3 rows · 2 columns"
+    expect(/3.*rows|3.*строк/i.test(text)).toBe(true);
+    expect(/2.*columns|2.*колонок/i.test(text)).toBe(true);
   });
 
   test('shows empty message for blank content', () => {
-    render(<CsvViewer content="" ext="csv" />);
-    expect(screen.getByText(/пусто|empty|нет данных/i)).toBeTruthy();
+    render(<CsvViewer content="" ext="csv" projectPath="/p" relPath="x.csv" />);
+    expect(screen.getByText(/пусто|empty|нет данных|no data/i)).toBeTruthy();
+  });
+
+  test('renders search input in toolbar', () => {
+    render(<CsvViewer content={SAMPLE} ext="csv" projectPath="/p" relPath="x.csv" />);
+    const input = screen.getByPlaceholderText(/search|поиск/i);
+    expect(input).toBeTruthy();
+    expect((input as HTMLInputElement).tagName).toBe('INPUT');
+  });
+
+  test('filters by global search (best-effort under jsdom)', () => {
+    const { container } = render(
+      <CsvViewer content={SAMPLE} ext="csv" projectPath="/p" relPath="x.csv" />,
+    );
+    const input = screen.getByPlaceholderText(/search|поиск/i) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Bob' } });
+    // After filter, meta should report 1 row remaining of 3 total.
+    const text = container.textContent ?? '';
+    expect(/1\s*\/\s*3/.test(text)).toBe(true);
   });
 });

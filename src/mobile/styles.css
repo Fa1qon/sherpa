@@ -1,0 +1,35 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f7; color: #1d1d1f; margin: 0; padding: 16px; }
+h1, h2, h3 { margin: 0 0 16px; }
+.screen { max-width: 480px; margin: 0 auto; }
+.loginForm { display: flex; flex-direction: column; gap: 12px; }
+.loginForm input { font-size: 24px; padding: 16px; border: 2px solid #d2d2d7; border-radius: 8px; text-align: center; letter-spacing: 8px; }
+.loginForm button { font-size: 16px; padding: 14px; background: #0066cc; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+.loginForm button:disabled { opacity: 0.5; }
+.error { color: #d70015; font-size: 14px; }
+.taskList { list-style: none; margin: 0; padding: 0; }
+.taskList li { margin-bottom: 8px; }
+.taskList a { display: block; padding: 16px; background: #fff; border-radius: 8px; text-decoration: none; color: #1d1d1f; border: 1px solid #d2d2d7; }
+.taskList a.pending { border-color: #ff9f0a; background: #fff8e6; }
+.taskList .title { font-weight: 600; }
+.taskList .meta { font-size: 12px; color: #6e6e73; margin-top: 4px; }
+.back { color: #0066cc; text-decoration: none; font-size: 14px; }
+.gateList { list-style: none; margin: 0; padding: 0; }
+.gateList li { padding: 16px; background: #fff; border: 1px solid #d2d2d7; border-radius: 8px; margin-bottom: 12px; }
+.gateList .title { font-weight: 600; }
+.gateList .desc { font-size: 13px; color: #6e6e73; margin: 4px 0; }
+.gateList .actions { display: flex; gap: 8px; margin-top: 12px; }
+.gateList button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+.gateList .primary { background: #00997a; color: #fff; }
+.gateList .danger { background: #d70015; color: #fff; }
+.gateList button:disabled { opacity: 0.5; }
+
+@media (prefers-color-scheme: dark) {
+  body { background: #1a1a1c; color: #e5e5e7; }
+  .loginForm input { background: #2a2a2c; color: #e5e5e7; border-color: #38383a; }
+  .taskList a, .gateList li { background: #232325; border-color: #38383a; color: #e5e5e7; }
+  .taskList a.pending { background: #2d2410; border-color: #ff9f0a; }
+  .taskList .meta, .gateList .desc { color: #a0a0a5; }
+  .back { color: #4d9aff; }
+  .error { color: #ff6961; }
+}

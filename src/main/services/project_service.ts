@@ -11,10 +11,13 @@ import type {
 import type { Project, RecentEntry } from '../../core/domain/project';
 import { isProject, toRecentEntry } from '../../core/domain/project';
 import { atomicWrite } from '../../core/infrastructure/atomic_write';
+import type { EventBus } from './event_bus';
 
 export interface ProjectServiceOptions {
   /** Override user home (testing). Default: os.homedir(). */
   readonly userHome?: string;
+  /** Plan 02 — optional EventBus for project.opened events. */
+  readonly bus?: EventBus | null;
 }
 
 interface RecentFile {
@@ -29,9 +32,11 @@ const DEFAULT_SHERPA_CONFIG = {
 
 export class ProjectService implements ProjectPort {
   private readonly userHome: string;
+  private readonly bus: EventBus | null;
 
   constructor(opts: ProjectServiceOptions = {}) {
     this.userHome = opts.userHome ?? process.env.SHERPA_TEST_USER_HOME ?? os.homedir();
+    this.bus = opts.bus ?? null;
   }
 
   async listRecent(): Promise<RecentEntry[]> {
@@ -100,6 +105,12 @@ export class ProjectService implements ProjectPort {
     const updated = { ...found, lastOpenedAt: new Date().toISOString() };
     const next = all.map((p) => (p.id === id ? updated : p));
     await this.writeAll(next);
+    // Plan 02 — typed project.opened event for SDK subscribers.
+    this.bus?.emit({
+      type: 'project.opened',
+      ts: Date.now(),
+      projectPath: updated.path,
+    });
     return updated;
   }
 

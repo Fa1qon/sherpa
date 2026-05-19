@@ -10,9 +10,13 @@ import { Network } from './sections/Network';
 import { About } from './sections/About';
 import { ProjectConfig } from './sections/ProjectConfig';
 import { Agents } from './sections/Agents';
+import { MobileWeb } from './sections/MobileWeb';
+import { McpServers } from './sections/McpServers';
+import { Extensions } from './sections/Extensions';
+import { SlotOutlet } from '../../extensions/SlotOutlet';
 import styles from './Settings.module.css';
 
-type SectionId = 'general' | 'appearance' | 'cost' | 'compliance' | 'advanced' | 'network' | 'agents' | 'project' | 'about';
+type SectionId = 'general' | 'appearance' | 'cost' | 'compliance' | 'advanced' | 'network' | 'agents' | 'mobileWeb' | 'mcpServers' | 'extensions' | 'project' | 'about';
 
 interface Props {
   /** Optional initial section to show on mount. Defaults to 'general'. */
@@ -28,7 +32,7 @@ export function Settings({ initialSection = 'general' }: Props): ReactElement {
       <aside className={styles.sidebar}>
         <h2 className={styles.title}>{t('settings.title')}</h2>
         <nav>
-          {(['general', 'appearance', 'cost', 'compliance', 'advanced', 'network', 'agents', 'project', 'about'] as const).map((id) => (
+          {(['general', 'appearance', 'cost', 'compliance', 'advanced', 'network', 'agents', 'mobileWeb', 'mcpServers', 'extensions', 'project', 'about'] as const).map((id) => (
             <button
               key={id}
               className={styles.navItem}
@@ -48,8 +52,12 @@ export function Settings({ initialSection = 'general' }: Props): ReactElement {
         {section === 'advanced' && <Advanced />}
         {section === 'network' && <Network />}
         {section === 'agents' && <Agents />}
+        {section === 'mobileWeb' && <MobileWeb />}
+        {section === 'mcpServers' && <McpServers />}
+        {section === 'extensions' && <Extensions />}
         {section === 'project' && <ProjectConfig />}
         {section === 'about' && <About />}
+        <SlotOutlet slot="settings.tab" layout="stack" />
       </main>
     </div>
   );

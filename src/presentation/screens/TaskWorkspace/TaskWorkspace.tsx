@@ -27,9 +27,11 @@ import {
 import { detectPreset } from '../../../core/domain/involvement';
 import { StageProgressBar } from './StageProgressBar';
 import { AskUserQuestionPopup } from './AskUserQuestionPopup';
+import { SlotOutlet } from '../../extensions/SlotOutlet';
+import { TransparencyPanel } from './Transparency/TransparencyPanel';
 import styles from './TaskWorkspace.module.css';
 
-type WorkspaceTab = 'chat' | 'journal';
+type WorkspaceTab = 'chat' | 'journal' | 'transparency';
 
 export function TaskWorkspace(): ReactElement {
   const { t } = useTranslation();
@@ -336,7 +338,6 @@ export function TaskWorkspace(): ReactElement {
                 : (task.title ?? t('task.empty', 'No task selected.'))}
             </h2>
             <span className={styles.status} data-status={task.status}>{task.status}</span>
-            {showEventLog && (
             <div className={styles.tabSwitcher} role="tablist" aria-label="workspace tabs">
               <button
                 type="button"
@@ -360,8 +361,18 @@ export function TaskWorkspace(): ReactElement {
                   {t('taskWorkspace.tab.journal', 'Event log')}
                 </button>
               )}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === 'transparency'}
+                data-active={tab === 'transparency' ? 'true' : 'false'}
+                className={styles.tabBtn}
+                onClick={() => setTab('transparency')}
+              >
+                {t('taskWorkspace.tab.transparency', 'Transparency')}
+              </button>
             </div>
-            )}
+            <SlotOutlet slot="task.toolbar" props={{ taskId: task.id }} />
           </header>
           {task.methodologyId && <StageProgressBar task={task} methodology={methodology} />}
           {error && <div className={styles.error}>{error}</div>}
@@ -411,6 +422,9 @@ export function TaskWorkspace(): ReactElement {
           ) : null}
           {showEventLog && tab === 'journal' && (
             <TracePanel projectPath={projectPath} taskId={task.id} />
+          )}
+          {tab === 'transparency' && (
+            <TransparencyPanel projectPath={projectPath} taskId={task.id} />
           )}
         </div>
       </div>

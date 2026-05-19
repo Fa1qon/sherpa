@@ -3,15 +3,10 @@ import CodeMirror from '@uiw/react-codemirror';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../renderer/store/settings';
 import { getCodeMirrorLang } from './fileType';
+import type { ViewerProps } from './viewer_registry';
 import styles from './CodeViewer.module.css';
 
-interface Props {
-  content: string;
-  ext: string;
-  onSave?: (content: string) => Promise<void>;
-}
-
-export function CodeViewer({ content, ext, onSave }: Props): ReactElement {
+export function CodeViewer({ content, ext, onSave }: ViewerProps): ReactElement {
   const { t } = useTranslation();
   const theme = useSettings((s) => s.user.theme);
   const cmTheme = theme === 'light' ? 'light' : 'dark';

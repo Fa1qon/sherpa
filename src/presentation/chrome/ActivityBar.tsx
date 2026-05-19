@@ -9,6 +9,7 @@ import {
   GitBranch,
   Puzzle,
   Globe,
+  BarChart3,
   type LucideProps,
 } from 'lucide-react';
 import { useSideBar, type Activity } from '../../renderer/store/sidebar';
@@ -74,6 +75,7 @@ export function ActivityBar(): ReactElement {
     { kind: 'sidebar', activity: 'tasks', Icon: LayoutList, labelKey: 'sidebar.tasks', badge: activeTaskCount },
     { kind: 'sidebar', activity: 'library', Icon: Library, labelKey: 'sidebar.library' },
     { kind: 'action', id: 'browser', Icon: Globe, labelKey: 'activityBar.browser' },
+    { kind: 'action', id: 'analytics', Icon: BarChart3, labelKey: 'activityBar.analytics' },
   ];
 
   const BOTTOM_ITEMS: readonly Item[] = [
@@ -92,6 +94,9 @@ export function ActivityBar(): ReactElement {
       if (item.kind === 'sidebar') toggleSidebar(item.activity);
       if (item.kind === 'action' && item.id === 'browser') {
         openTab({ kind: 'browser', title: t('activityBar.browser', 'Browser') });
+      }
+      if (item.kind === 'action' && item.id === 'analytics') {
+        openTab({ kind: 'analytics', title: t('activityBar.analytics', 'Analytics') });
       }
     };
     const badge = item.kind === 'sidebar' ? item.badge : undefined;

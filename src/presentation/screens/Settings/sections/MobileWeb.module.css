@@ -1,0 +1,25 @@
+.section { padding: 24px; max-width: 600px; }
+.heading { font-size: 16px; font-weight: 600; margin: 0 0 20px; color: var(--fg-default); }
+.row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; color: var(--fg-default); }
+.row input[type="number"], .row input[type="password"] {
+  padding: 6px 10px; border: 1px solid var(--border-default); background: var(--bg-input);
+  color: var(--fg-default); border-radius: 4px; font-size: 13px; width: 120px;
+}
+.row button {
+  padding: 6px 14px; background: var(--accent); color: var(--accent-fg);
+  border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.message { font-size: 12px; color: var(--fg-muted); margin: 4px 0 12px; }
+.qrSection {
+  margin-top: 24px; padding: 20px; border: 1px solid var(--border-default);
+  border-radius: 8px; background: var(--bg-elevated); text-align: center;
+}
+.urlBox {
+  font-family: var(--font-mono); font-size: 13px; padding: 8px 12px;
+  background: var(--bg-input); border-radius: 4px; margin-bottom: 16px;
+  color: var(--fg-default);
+}
+.qr { display: flex; justify-content: center; }
+.qr svg { max-width: 220px; height: auto; }
+.hint { font-size: 11px; color: var(--fg-muted); margin: 8px 0 0; }
+.warn { font-size: 11px; color: var(--warn, #b8860b); margin: 8px 0 0; }

@@ -365,11 +365,12 @@ describe('TaskWorkspace — Resume banner (Plan 8-fix Task 4)', () => {
 });
 
 describe('TaskWorkspace — Chat/Journal tab toggle (Plan 8b Task 4)', () => {
-  test('renders no tab buttons by default (showEventLog=false)', () => {
+  test('renders Chat and Transparency tabs by default (showEventLog=false)', () => {
     useTask.setState({ current: makeTask(), sending: false });
     renderWorkspace();
-    // Tab switcher is hidden when journal is disabled — no tab buttons shown.
-    expect(screen.queryByRole('tab', { name: 'Chat' })).toBeNull();
+    // Chat and Transparency tabs are always visible; Event log is gated behind showEventLog.
+    expect(screen.getByRole('tab', { name: 'Chat' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Transparency' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Event log' })).toBeNull();
   });
 

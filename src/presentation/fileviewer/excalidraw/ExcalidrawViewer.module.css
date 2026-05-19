@@ -1,0 +1,61 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+
+.toggleBtn {
+  padding: 4px 12px;
+  background: transparent;
+  color: var(--fg-muted);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-size-sm, 12px);
+}
+
+.toggleBtn:hover {
+  background: var(--bg-hover);
+  color: var(--fg-default);
+}
+
+.canvas {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.loading, .error {
+  padding: 16px;
+  color: var(--fg-muted);
+}
+
+.error {
+  border: 1px solid var(--error, #e74c3c);
+  border-radius: 6px;
+  background: rgba(231, 76, 60, 0.08);
+  margin: 12px;
+}
+
+.errorTitle {
+  color: var(--error, #e74c3c);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.error pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: var(--font-size-xs, 11px);
+  color: var(--fg-default);
+}

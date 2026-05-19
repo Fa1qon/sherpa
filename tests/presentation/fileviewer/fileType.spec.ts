@@ -21,8 +21,12 @@ describe('getFileType', () => {
     expect(getFileType('log')).toBe('text');
   });
   test('binary extensions', () => {
-    expect(getFileType('pdf')).toBe('binary');
     expect(getFileType('zip')).toBe('binary');
+    expect(getFileType('exe')).toBe('binary');
+  });
+  test('pdf is not binary (viewable via PdfViewer)', () => {
+    // 'pdf' must not be classified as binary so FilesPanel allows opening it.
+    expect(getFileType('pdf')).not.toBe('binary');
   });
   test('code extensions', () => {
     expect(getFileType('ts')).toBe('code');

@@ -5,29 +5,30 @@
   align-items: center;
   gap: 8px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border-color, #333);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .agentName {
   flex: 0 0 120px;
   font-weight: 500;
+  color: var(--fg-default);
 }
 
 .status {
   flex: 1;
   font-size: 12px;
-  color: var(--text-muted, #888);
+  color: var(--fg-muted);
 }
 
-.statusOk { color: var(--color-success, #4caf50); }
-.statusMissing { color: var(--text-muted, #888); }
+.statusOk { color: var(--success); }
+.statusMissing { color: var(--fg-muted); }
 
 .input {
   flex: 2;
   padding: 4px 8px;
-  background: var(--input-bg, #1e1e1e);
-  color: var(--text-primary, #ccc);
-  border: 1px solid var(--border-color, #444);
+  background: var(--bg-input);
+  color: var(--fg-default);
+  border: 1px solid var(--border-default);
   border-radius: 4px;
   font-family: monospace;
   font-size: 12px;
@@ -35,13 +36,13 @@
 
 .btn {
   padding: 4px 10px;
-  border: 1px solid var(--border-color, #444);
+  border: 1px solid var(--border-default);
   border-radius: 4px;
   background: transparent;
-  color: var(--text-primary, #ccc);
+  color: var(--fg-default);
   cursor: pointer;
   font-size: 12px;
 }
 
-.btn:hover { background: var(--hover-bg, #2a2a2a); }
-.btnDanger { color: var(--color-danger, #e57373); border-color: var(--color-danger, #e57373); }
+.btn:hover { background: var(--bg-hover); }
+.btnDanger { color: var(--error); border-color: var(--error); }

@@ -305,3 +305,78 @@ mode: auto
     expect(out).toMatch(/^## Stage: s1\nmode: auto/m);
   });
 });
+
+describe('parse v2 external gate (Plan 04)', () => {
+  test('external gate parses with webhook trigger', () => {
+    const src = V2_ROOT + `
+\`\`\`yaml
+gate:
+  kind: external
+  items: []
+  trigger:
+    source: webhook
+    pathPrefix: /triggers
+  timeoutMs: 60000
+  onTimeout: continue
+\`\`\`
+`;
+    const r = parseMethodology(src, '/p.md');
+    if (!r.ok) throw new Error(`parse fail: ${JSON.stringify(r.error)}`);
+    const stage = r.methodology.stages[0]!;
+    expect(stage.gate).toBeDefined();
+    expect(stage.gate!.kind).toBe('external');
+    expect(stage.gate!.trigger).toEqual({ source: 'webhook', pathPrefix: '/triggers' });
+    expect(stage.gate!.timeoutMs).toBe(60000);
+    expect(stage.gate!.onTimeout).toBe('continue');
+  });
+
+  test('external gate parses with cron trigger', () => {
+    const src = V2_ROOT + `
+\`\`\`yaml
+gate:
+  kind: external
+  items: []
+  trigger:
+    source: cron
+    expression: "*/5 * * * *"
+\`\`\`
+`;
+    const r = parseMethodology(src, '/p.md');
+    if (!r.ok) throw new Error('parse fail');
+    const gate = r.methodology.stages[0]!.gate!;
+    expect(gate.kind).toBe('external');
+    expect(gate.trigger).toEqual({ source: 'cron', expression: '*/5 * * * *' });
+  });
+
+  test('external gate parses with file trigger + event', () => {
+    const src = V2_ROOT + `
+\`\`\`yaml
+gate:
+  kind: external
+  items: []
+  trigger:
+    source: file
+    pattern: "outputs/**/*.json"
+    event: create
+\`\`\`
+`;
+    const r = parseMethodology(src, '/p.md');
+    if (!r.ok) throw new Error('parse fail');
+    const gate = r.methodology.stages[0]!.gate!;
+    expect(gate.trigger).toEqual({ source: 'file', pattern: 'outputs/**/*.json', event: 'create' });
+  });
+
+  test('external gate without trigger emits a warning', () => {
+    const src = V2_ROOT + `
+\`\`\`yaml
+gate:
+  kind: external
+  items: []
+\`\`\`
+`;
+    const r = parseMethodology(src, '/p.md');
+    if (!r.ok) throw new Error('parse fail');
+    expect(r.warnings.some((w) => w.includes("kind='external' requires a 'trigger' object"))).toBe(true);
+  });
+});
+

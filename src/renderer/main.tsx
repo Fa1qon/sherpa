@@ -5,6 +5,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { registerDefaultViewers } from '../presentation/fileviewer/register_default_viewers';
+
+registerDefaultViewers();
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {

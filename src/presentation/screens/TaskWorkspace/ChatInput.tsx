@@ -5,6 +5,7 @@ import { useTask } from '../../../renderer/store/task';
 import { useProject } from '../../../renderer/store/project';
 import { useDraft } from '../../../renderer/hooks/useDraft';
 import { useChatAttach } from '../../../renderer/store/chat_attach';
+import { SlotOutlet } from '../../extensions/SlotOutlet';
 import styles from './TaskWorkspace.module.css';
 
 interface ChatInputProps {
@@ -126,6 +127,7 @@ export function ChatInput({ onBeforeSend, onSettingsToggle, settingsChip }: Chat
           disabled={busy}
           rows={3}
         />
+        <SlotOutlet slot="chat.input.addon" />
         <button
           type="button"
           data-testid="chat-send-btn"

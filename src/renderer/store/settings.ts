@@ -1,6 +1,6 @@
 // src/renderer/store/settings.ts
 import { create } from 'zustand';
-import type { UserSettings, ProjectSettings, Theme, Language, CostTrackingSettings, ComplianceOutputMode, AgentCli } from '../../core/domain/settings';
+import type { UserSettings, ProjectSettings, Theme, Language, CostTrackingSettings, ComplianceOutputMode, AgentCli, MobileWebSettings } from '../../core/domain/settings';
 import { defaultUserSettings } from '../../core/domain/settings';
 import type { ProxyEntry, ProxyAssignments } from '../../core/domain/proxy';
 import { ipcClient } from '../ipc/client';
@@ -21,6 +21,8 @@ export interface SettingsState {
   updateProxyEntries(entries: ProxyEntry[]): Promise<void>;
   updateProxyAssignments(assignments: ProxyAssignments): Promise<void>;
   setAgentCredential(agentId: AgentCli, apiKey: string): Promise<void>;
+  updateMobileWeb(next: MobileWebSettings | undefined): Promise<void>;
+  setInboundTriggerPort(port: number | undefined): Promise<void>;
 }
 
 export const useSettings = create<SettingsState>((set, get) => ({
@@ -97,5 +99,17 @@ export const useSettings = create<SettingsState>((set, get) => ({
     await window.sherpa.agent.storeKey(agentId, apiKey);
     const user = await ipcClient.settings().getUser();
     set({ user });
+  },
+
+  updateMobileWeb: async (mobileWeb) => {
+    const next = { ...get().user, mobileWeb };
+    set({ user: next });
+    await ipcClient.settings().setUser(next);
+  },
+
+  setInboundTriggerPort: async (inboundTriggerPort) => {
+    const next = { ...get().user, inboundTriggerPort };
+    set({ user: next });
+    await ipcClient.settings().setUser(next);
   },
 }));

@@ -52,6 +52,7 @@ import {
   ARTIFACT_INVARIANT_OPS,
 } from '../domain/methodology';
 import { TASK_COMPLEXITIES, type TaskComplexity } from '../domain/task';
+import type { InboundTriggerConfig } from '../domain/inbound_trigger';
 import type { LoadMethodologyResult } from '../ports/methodology_port';
 
 const KNOWN_FRONT_KEYS = new Set([
@@ -65,7 +66,23 @@ const KNOWN_FRONT_KEYS = new Set([
 
 const STATE_FLAG_KINDS: readonly StateFlagKind[] = ['counter', 'flag'];
 
-const GATE_KINDS: readonly GateKind[] = ['standard', 'comprehension'];
+const GATE_KINDS: readonly GateKind[] = ['standard', 'comprehension', 'external'];
+
+const ON_TIMEOUT_VALUES: readonly ('fail' | 'continue' | 'retry')[] = ['fail', 'continue', 'retry'];
+
+const INBOUND_SOURCES: readonly ('webhook' | 'cron' | 'file' | 'telegram')[] = [
+  'webhook',
+  'cron',
+  'file',
+  'telegram',
+];
+
+const FILE_TRIGGER_EVENTS: readonly ('create' | 'modify' | 'delete' | 'any')[] = [
+  'create',
+  'modify',
+  'delete',
+  'any',
+];
 
 const GATE_ITEM_KINDS: readonly GateItemKind[] = [
   'artifact_written',
@@ -1500,9 +1517,122 @@ function parseGate(value: unknown, stageId: string, warnings: string[]): Gate | 
     items.push(item);
   }
 
+  // Track C Plan 04 — external-gate fields. Lightweight structural parsing;
+  // semantic validation (e.g. cron expression) happens in the runtime layer.
+  const trigger = parseInboundTrigger(g.trigger, stageId, warnings);
+
+  let timeoutMs: number | undefined;
+  if (g.timeoutMs !== undefined) {
+    if (typeof g.timeoutMs !== 'number' || !Number.isFinite(g.timeoutMs) || g.timeoutMs < 0) {
+      warnings.push(`stage ${stageId}: gate.timeoutMs must be a non-negative number — dropped`);
+    } else {
+      timeoutMs = g.timeoutMs;
+    }
+  }
+
+  let onTimeout: 'fail' | 'continue' | 'retry' | undefined;
+  if (g.onTimeout !== undefined) {
+    if (typeof g.onTimeout !== 'string' || !(ON_TIMEOUT_VALUES as readonly string[]).includes(g.onTimeout)) {
+      warnings.push(
+        `stage ${stageId}: gate.onTimeout must be one of ${ON_TIMEOUT_VALUES.join(', ')} — dropped`,
+      );
+    } else {
+      onTimeout = g.onTimeout as 'fail' | 'continue' | 'retry';
+    }
+  }
+
+  if (kind === 'external' && trigger === undefined) {
+    warnings.push(`stage ${stageId}: gate.kind='external' requires a 'trigger' object`);
+  }
+
   return {
     kind,
     items,
+    ...(trigger !== undefined && { trigger }),
+    ...(timeoutMs !== undefined && { timeoutMs }),
+    ...(onTimeout !== undefined && { onTimeout }),
+  };
+}
+
+function parseInboundTrigger(
+  value: unknown,
+  stageId: string,
+  warnings: string[],
+): InboundTriggerConfig | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'object' || value === null) {
+    warnings.push(`stage ${stageId}: gate.trigger must be an object — dropped`);
+    return undefined;
+  }
+  const t = value as Record<string, unknown>;
+  if (typeof t.source !== 'string' || !(INBOUND_SOURCES as readonly string[]).includes(t.source)) {
+    warnings.push(
+      `stage ${stageId}: gate.trigger.source must be one of ${INBOUND_SOURCES.join(', ')} — dropped`,
+    );
+    return undefined;
+  }
+  const source = t.source as 'webhook' | 'cron' | 'file' | 'telegram';
+
+  if (source === 'webhook') {
+    let pathPrefix: string | undefined;
+    if (t.pathPrefix !== undefined) {
+      if (typeof t.pathPrefix !== 'string') {
+        warnings.push(`stage ${stageId}: gate.trigger.pathPrefix must be a string — dropped`);
+      } else {
+        pathPrefix = t.pathPrefix;
+      }
+    }
+    return { source, ...(pathPrefix !== undefined && { pathPrefix }) };
+  }
+
+  if (source === 'cron') {
+    if (typeof t.expression !== 'string' || t.expression.length === 0) {
+      warnings.push(`stage ${stageId}: gate.trigger.expression must be a non-empty string — dropped`);
+      return undefined;
+    }
+    return { source, expression: t.expression };
+  }
+
+  if (source === 'file') {
+    if (typeof t.pattern !== 'string' || t.pattern.length === 0) {
+      warnings.push(`stage ${stageId}: gate.trigger.pattern must be a non-empty string — dropped`);
+      return undefined;
+    }
+    let event: 'create' | 'modify' | 'delete' | 'any' | undefined;
+    if (t.event !== undefined) {
+      if (typeof t.event !== 'string' || !(FILE_TRIGGER_EVENTS as readonly string[]).includes(t.event)) {
+        warnings.push(
+          `stage ${stageId}: gate.trigger.event must be one of ${FILE_TRIGGER_EVENTS.join(', ')} — dropped`,
+        );
+      } else {
+        event = t.event as 'create' | 'modify' | 'delete' | 'any';
+      }
+    }
+    return { source, pattern: t.pattern, ...(event !== undefined && { event }) };
+  }
+
+  // telegram
+  if (typeof t.botToken !== 'string' || t.botToken.length === 0) {
+    warnings.push(`stage ${stageId}: gate.trigger.botToken must be a non-empty string — dropped`);
+    return undefined;
+  }
+  if (typeof t.command !== 'string' || t.command.length === 0) {
+    warnings.push(`stage ${stageId}: gate.trigger.command must be a non-empty string — dropped`);
+    return undefined;
+  }
+  let fromUser: string | undefined;
+  if (t.fromUser !== undefined) {
+    if (typeof t.fromUser !== 'string') {
+      warnings.push(`stage ${stageId}: gate.trigger.fromUser must be a string — dropped`);
+    } else {
+      fromUser = t.fromUser;
+    }
+  }
+  return {
+    source,
+    botToken: t.botToken,
+    command: t.command,
+    ...(fromUser !== undefined && { fromUser }),
   };
 }
 

@@ -1,0 +1,102 @@
+/* ToolCallCard.module.css */
+
+.card {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+
+.card.error {
+  border-color: var(--error);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-default);
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.4;
+  transition: background 0.1s;
+}
+
+.header:hover {
+  background: var(--bg-hover);
+}
+
+.tool {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage {
+  font-size: 10px;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.duration {
+  font-size: 10px;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.errorIcon {
+  color: var(--error);
+  flex-shrink: 0;
+}
+
+.okIcon {
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.body {
+  padding: 0 8px 8px 8px;
+  background: var(--bg-app);
+}
+
+.section {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.section > summary {
+  cursor: pointer;
+  padding: 2px 0;
+  user-select: none;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-default);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 6px 8px;
+  margin: 4px 0 0 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}

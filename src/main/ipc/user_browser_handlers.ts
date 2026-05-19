@@ -1,6 +1,8 @@
 // src/main/ipc/user_browser_handlers.ts
-// IPC surface for the user-facing embedded browser (ubrowser:* channels).
-// Registered once at app startup; coordinates are renderer pixel values.
+// IPC surface for the user-facing embedded browser. The renderer-owned
+// <webview> tag (BrowserTab) registers its webContentsId via attach so
+// MCP automation tools (Track B user_browser_*) and the legacy
+// navigate/back/forward/reload calls all reach the same web frame.
 
 import { ipcMain, BrowserWindow } from 'electron';
 import { userBrowser } from '../services/user_browser';
@@ -17,21 +19,25 @@ export function registerUserBrowserHandlers(): void {
   // Forward URL changes to all renderer windows.
   userBrowser.onUrlChanged(notifyAll);
 
-  ipcMain.handle(
-    'ubrowser:show',
-    (_e, x: number, y: number, w: number, h: number, url?: string) => {
-      const win = BrowserWindow.getAllWindows()[0] ?? null;
-      if (win) userBrowser.setMainWindow(win);
-      userBrowser.show(x, y, w, h, url);
-    },
-  );
+  // NEW: renderer registers the <webview>'s webContents id on dom-ready.
+  ipcMain.handle('ubrowser:attach', (_e, id: number | null) => {
+    const win = BrowserWindow.getAllWindows()[0] ?? null;
+    if (win) userBrowser.setMainWindow(win);
+    userBrowser.attachWebContents(id);
+  });
 
-  ipcMain.handle('ubrowser:hide', () => { userBrowser.hide(); });
+  // Legacy no-ops kept for any caller still using ubrowser:show/hide
+  // (e.g. early-version HtmlViewer/PdfViewer renderers). The new
+  // architecture renders via <webview> in the React DOM, so positioning
+  // happens via CSS and these calls are unnecessary.
+  ipcMain.handle('ubrowser:show', (_e, _x: number, _y: number, _w: number, _h: number, url?: string) => {
+    if (url) userBrowser.navigate(url);
+  });
+  ipcMain.handle('ubrowser:hide', () => { /* no-op */ });
 
   ipcMain.handle('ubrowser:navigate', (_e, url: string) => {
     userBrowser.navigate(url);
   });
-
   ipcMain.handle('ubrowser:back', () => { userBrowser.back(); });
   ipcMain.handle('ubrowser:forward', () => { userBrowser.forward(); });
   ipcMain.handle('ubrowser:reload', () => { userBrowser.reload(); });

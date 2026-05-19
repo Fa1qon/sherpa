@@ -26,6 +26,8 @@ import type { MethodologyPort } from '../../core/ports/methodology_port';
 import type { MethodologyRunner, TaskRunResult } from './methodology_runner';
 import type { MetaMdStore } from './gate_evaluator';
 import type { LooseTraceEvent } from './trace_logger';
+import type { EventBus } from './event_bus';
+import type { PluginExecutor } from '../plugins/plugin_executor';
 
 // ---------------------------------------------------------------------------
 // TaskEventEmitter — tiny pub/sub for engine events
@@ -97,6 +99,12 @@ export class TaskSupervisor implements TaskSupervisorPort {
     private readonly runnerFactory: RunnerFactory,
     private readonly events: TaskEventEmitter,
     private readonly metaStore: MetaMdStore,
+    // Plan 02 — optional EventBus for SDK subscribers; default null keeps
+    // existing tests constructing `new TaskSupervisor(...)` valid.
+    private readonly bus: EventBus | null = null,
+    // Track C Plan 02 — optional pipeline plugin executor; dispatches
+    // `on_task_complete` / `on_task_fail` at run settlement.
+    private readonly pluginExecutor: PluginExecutor | null = null,
   ) {}
 
   async start(task: Task, projectPath: string): Promise<void> {
@@ -152,22 +160,58 @@ export class TaskSupervisor implements TaskSupervisorPort {
     // settlement handlers below to clean up + emit terminal events.
     const promise = runner
       .run(methodology, task, projectPath)
-      .then((result): TaskRunResult => {
+      .then(async (result): Promise<TaskRunResult> => {
         if (result.kind === 'completed') {
           this.events.emit(task.id, { kind: 'task_completed' });
           this.terminal.set(task.id, 'completed');
+          this.bus?.emit({
+            type: 'task.completed',
+            ts: Date.now(),
+            taskId: task.id,
+            success: true,
+          });
+          await this.pluginExecutor?.dispatch('on_task_complete', {
+            hook: 'on_task_complete',
+            task: { id: task.id, workdir: projectPath, methodologyId: task.methodologyId },
+            event: {},
+            timestamp: Date.now(),
+          });
         } else if (result.kind === 'failed') {
           this.events.emit(task.id, { kind: 'task_failed', reason: result.reason });
           this.terminal.set(task.id, 'failed');
+          this.bus?.emit({
+            type: 'task.completed',
+            ts: Date.now(),
+            taskId: task.id,
+            success: false,
+          });
+          await this.pluginExecutor?.dispatch('on_task_fail', {
+            hook: 'on_task_fail',
+            task: { id: task.id, workdir: projectPath, methodologyId: task.methodologyId },
+            event: { reason: result.reason },
+            timestamp: Date.now(),
+          });
         }
         // 'paused' is NOT a terminal state — the runner emitted task_paused
         // already; the active record is removed (resume re-bootstraps).
         return result;
       })
-      .catch((err: unknown): TaskRunResult => {
+      .catch(async (err: unknown): Promise<TaskRunResult> => {
         const reason = err instanceof Error ? err.message : String(err);
         this.events.emit(task.id, { kind: 'task_failed', reason });
         this.terminal.set(task.id, 'failed');
+        this.bus?.emit({
+          type: 'task.completed',
+          ts: Date.now(),
+          taskId: task.id,
+          success: false,
+        });
+        await this.pluginExecutor?.dispatch('on_task_fail', {
+          hook: 'on_task_fail',
+          task: { id: task.id, workdir: projectPath, methodologyId: task.methodologyId },
+          event: { reason },
+          timestamp: Date.now(),
+        });
         return { kind: 'failed', reason };
       })
       .finally(() => {

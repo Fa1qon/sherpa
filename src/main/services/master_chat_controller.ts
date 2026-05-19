@@ -4,6 +4,7 @@ import type { Task } from '../../core/domain/task';
 import { SystemPromptAssembler } from './system_prompt_assembler';
 import type { AgentRegistry } from './agent_registry';
 import type { AgentCli } from '../../core/domain/settings';
+import type { EventBus } from './event_bus';
 
 /**
  * Adapts agent output text for display to the end user.
@@ -71,6 +72,9 @@ export class MasterChatController {
   constructor(
     private readonly registry: AgentRegistry,
     assembler?: SystemPromptAssembler,
+    // Plan 02 — optional EventBus emits message.sent / message.received /
+    // tool.called / tool.result for SDK subscribers.
+    private readonly bus: EventBus | null = null,
   ) {
     this.assembler = assembler ?? new SystemPromptAssembler();
   }
@@ -99,11 +103,61 @@ export class MasterChatController {
       mcpConfigPath: turn.mcpConfigPath,
     });
     const collected: AgentMessage[] = [];
+    const taskId = turn.task.id;
+    // Track per-tool call start time so tool.result can include durationMs.
+    const toolStarts = new Map<string, number>();
     const unsubscribe = worker.onMessage((m) => {
       collected.push(m);
       onMessage?.(m);
+      // Plan 02 — typed events for SDK subscribers.
+      try {
+        if (m.role === 'agent') {
+          this.bus?.emit({
+            type: 'message.received',
+            ts: Date.now(),
+            taskId,
+            role: 'agent',
+            text: m.text,
+          });
+        } else if (m.role === 'tool' && m.toolCall) {
+          const key = `${m.toolCall.name}::${m.id}`;
+          if (m.toolCall.status === 'pending') {
+            toolStarts.set(key, Date.now());
+            this.bus?.emit({
+              type: 'tool.called',
+              ts: Date.now(),
+              taskId,
+              tool: m.toolCall.name,
+              input: m.toolCall.args,
+            });
+          } else {
+            const start = toolStarts.get(key) ?? Date.now();
+            toolStarts.delete(key);
+            this.bus?.emit({
+              type: 'tool.result',
+              ts: Date.now(),
+              taskId,
+              tool: m.toolCall.name,
+              ok: m.toolCall.status === 'success',
+              output: m.toolCall.result ?? '',
+              durationMs: Date.now() - start,
+            });
+          }
+        }
+      } catch {
+        // Never block message delivery on an emit failure.
+      }
     });
     try {
+      // Plan 02 — user message emitted before send so subscribers see input
+      // ordering (sent → received) correctly.
+      this.bus?.emit({
+        type: 'message.sent',
+        ts: Date.now(),
+        taskId,
+        role: 'user',
+        text: turn.userMessage,
+      });
       await worker.send(turn.userMessage);
       await worker.awaitTurn();
     } finally {

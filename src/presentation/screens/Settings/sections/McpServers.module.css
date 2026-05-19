@@ -1,0 +1,195 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heading {
+  margin: 0;
+  font-size: 16px;
+  color: var(--fg-default);
+}
+
+.empty {
+  color: var(--fg-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.id {
+  font-family: monospace;
+  font-weight: 500;
+  color: var(--fg-default);
+  min-width: 120px;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-input);
+  color: var(--fg-default);
+  border: 1px solid var(--border-default);
+}
+
+.pill[data-transport="sse"] {
+  color: var(--accent, var(--fg-default));
+}
+
+.target {
+  flex: 1;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-default);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn:hover { background: var(--bg-hover); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnPrimary {
+  padding: 4px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--fg-default);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.btnPrimary:hover { background: var(--bg-hover); }
+
+.btnDanger {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.pingResult {
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--bg-input);
+}
+
+.pingOk { color: var(--success); }
+.pingFail { color: var(--error); }
+
+.draft {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+}
+
+.draftHeading {
+  margin: 0;
+  font-size: 14px;
+  color: var(--fg-default);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.input {
+  padding: 4px 8px;
+  background: var(--bg-input);
+  color: var(--fg-default);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.textarea {
+  padding: 6px 8px;
+  background: var(--bg-input);
+  color: var(--fg-default);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.errors {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--error);
+  font-size: 12px;
+}
+
+.draftActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

@@ -5,6 +5,7 @@ import { FilesPanel } from '../sidebar/FilesPanel';
 import { TasksPanel } from '../sidebar/TasksPanel';
 import { LibrarySidebarPanel } from '../sidebar/LibrarySidebarPanel';
 import { SettingsSidebarPanel } from '../sidebar/SettingsSidebarPanel';
+import { SlotOutlet } from '../extensions/SlotOutlet';
 import styles from './SideBar.module.css';
 
 const HEADER_KEYS: Record<string, string> = {
@@ -30,6 +31,7 @@ export function SideBar(): ReactElement | null {
         {activity === 'tasks' && <TasksPanel />}
         {activity === 'library' && <LibrarySidebarPanel />}
         {activity === 'settings' && <SettingsSidebarPanel />}
+        <SlotOutlet slot="sidebar.panel" layout="stack" />
       </div>
     </aside>
   );
